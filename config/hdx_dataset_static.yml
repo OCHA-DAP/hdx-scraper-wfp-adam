@@ -1,0 +1,8 @@
+license_id: "cc-by-sa"
+subnational: True
+caveats: ""
+methodology: "Other"
+methodology_other: "ADAM is an operational system for collecting, analysing and mapping geospatial and socio-economic information following sudden onset humanitarian emergencies. Currently operational for floods, earthquakes and tropical storms, ADAM issues alerts and response dashboards aggregating relevant, evidence-based, near-real time risk and impact information. "
+dataset_source: "WFP ADAM"
+package_creator: "mcarans"
+private: False  # has to be True or False
