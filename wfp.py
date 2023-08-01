@@ -73,14 +73,7 @@ class ADAM:
                 self.latest_episodes[event_id] = event
 
     def parse_eventtype_feed(self, event):
-        url = self.configuration["url"]
-        event_type = event["event_type"]
-        eventtype_info = self.configuration["event_types"].get(event_type)
-        if not eventtype_info:
-            return
-        event_id = event["event_id"]
-        url = f"{url}{event_type}/{event_id}"
-        json = self.retriever.download_json(url)
+        json = self.retriever.download_json(event["eventDetails"])
         features = json.get("features")
         if features:
             episode_ids = []
@@ -93,6 +86,9 @@ class ADAM:
             episode_ids = None
             properties = json["properties"]
         event["properties"] = properties
+        event_id = event["event_id"]
+        event_type = event["event_type"]
+        eventtype_info = self.configuration["event_types"].get(event_type)
         name = eventtype_info["name"]
         event["name"] = lazy_fstr(name, properties)
         title = eventtype_info["title"]
@@ -186,34 +182,34 @@ class ADAM:
         dataset.add_tags(tags)
         showcases = []
 
-        def add_showcase(title, description, url, image_url):
+        def add_showcase(title, description, url):
             showcase = Showcase(
                 {
                     "name": f"{slugified_name}-{slugify(title)}-showcase",
                     "title": title,
                     "notes": description,
                     "url": url,
-                    "image_url": image_url,
+                    "image_url": url,
                 }
             )
             showcase.add_tags(tags)
             showcases.append(showcase)
 
-        url, image_url = view_image("map")
+        preview_url, url = view_image("map")
         if url:
             if not shape_url:
-                dataset["customviz"] = [{"url": url}]
+                dataset["customviz"] = [{"url": preview_url}]
             else:
-                add_showcase("Map", "Map", url, image_url)
+                add_showcase("Map", "Map", url)
 
-        url, image_url = view_image("shakemap")
+        url = properties["url"].get("shakemap")
         if url:
-            add_showcase("Shake Map", "Shake Map", url, image_url)
-        url, image_url = view_image("wind")
+            add_showcase("Shake Map", "Shake Map", url)
+        url = properties["url"].get("wind")
         if url:
-            add_showcase("Wind Map", "Wind Map", url, image_url)
-        url, image_url = view_image("rainfall")
+            add_showcase("Wind Map", "Wind Map", url)
+        url = properties["url"].get("rainfall")
         if url:
-            add_showcase("Rainfall Map", "Rainfall Map", url, image_url)
+            add_showcase("Rainfall Map", "Rainfall Map", url)
 
         return dataset, showcases

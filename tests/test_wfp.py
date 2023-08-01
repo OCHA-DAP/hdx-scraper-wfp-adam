@@ -125,7 +125,7 @@ class TestADAM:
                             }
                         ],
                         "title": "Shake Map",
-                        "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/sm_us7000kgpb/sm_us7000kgpb.jpg",
+                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/sm_us7000kgpb/sm_us7000kgpb.jpg",
                     }
                 ]
 
@@ -189,7 +189,7 @@ class TestADAM:
                             },
                         ],
                         "title": "Wind Map",
-                        "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28.jpg",
+                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28.jpg",
                     },
                     {
                         "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28_rain5d.jpg",
@@ -206,6 +206,6 @@ class TestADAM:
                             },
                         ],
                         "title": "Rainfall Map",
-                        "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28_rain5d.jpg",
+                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28_rain5d.jpg",
                     },
                 ]
