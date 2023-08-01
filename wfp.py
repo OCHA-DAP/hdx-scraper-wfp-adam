@@ -7,6 +7,7 @@ Reads WFP ADAM data and creates datasets.
 
 """
 import logging
+import re
 
 from hdx.data.dataset import Dataset
 from hdx.data.resource import Resource
@@ -24,48 +25,111 @@ def lazy_fstr(template, properties):
 
 
 class ADAM:
-    def __init__(self, configuration, retriever):
+    regex = re.compile(r".*/(.*)/(.*)")
+
+    def __init__(self, configuration, retriever, today):
         self.configuration = configuration
         self.retriever = retriever
+        self.today = today.date().isoformat()
         self.last_build_date = None
+        self.latest_episodes = {}
+        self.events = []
 
-    def parse_feed(self, event_type, previous_build_date):
+    def parse_feed(self, previous_build_date):
         url = self.configuration["url"]
-        event_info = self.configuration["event_types"][event_type]
-        params = event_info["params"]
-        url = f"{url}{event_type}?{params}"
+        start_date = previous_build_date.date().isoformat()
+        url = f"{url}feed?start_date={start_date}&end_date={self.today}"
+        for event in self.retriever.download_json(url):
+            published = parse_date(event["pubDate"])
+            if published <= previous_build_date:
+                continue
+            m = self.regex.match(event["eventDetails"])
+            event_type = m.group(1)
+            eventtype_info = self.configuration["event_types"].get(event_type)
+            if not eventtype_info:
+                continue
+            event["event_type"] = event_type
+            guid = event["guid"]
+            parts = guid.split("_")
+            event_id_index = eventtype_info["event_id_index"]
+            event_id = parts[event_id_index]
+            prefix_index = eventtype_info["prefix_index"]
+            if prefix_index is not None:
+                prefix = parts[prefix_index]
+                if prefix not in eventtype_info["allowed_prefixes"]:
+                    continue
+                event_id = f"{prefix}_{event_id}"
+            episode_id_index = eventtype_info["episode_id_index"]
+            if episode_id_index is None:
+                episode_id = None
+            else:
+                episode_id = parts[episode_id_index]
+            prev_event = self.latest_episodes.get(event_id)
+            if prev_event is None or (
+                episode_id and episode_id > prev_event["episode_id"]
+            ):
+                event["event_id"] = event_id
+                event["episode_id"] = episode_id
+                self.latest_episodes[event_id] = event
+
+    def parse_eventtype_feed(self, event):
+        url = self.configuration["url"]
+        event_type = event["event_type"]
+        eventtype_info = self.configuration["event_types"].get(event_type)
+        if not eventtype_info:
+            return
+        event_id = event["event_id"]
+        url = f"{url}{event_type}/{event_id}"
         json = self.retriever.download_json(url)
-        events = []
-        for event in json["features"]:
-            properties = event["properties"]
-            published = parse_date(properties["published_at"])
-            if published > previous_build_date:
-                event["id"] = properties["event_id"]
-                event["type"] = event_type
-                title = event_info["title"]
-                event["title"] = lazy_fstr(title, properties)
-                description = event_info["description"]
-                event["description"] = lazy_fstr(description, properties)
-                events.append(event)
-        return events
+        features = json.get("features")
+        if features:
+            episode_ids = []
+            for feature in features:
+                episode_ids.append(feature["properties"]["episode_id"])
+            if not episode_ids:
+                return
+            properties = features[0]["properties"]
+        else:
+            episode_ids = None
+            properties = json["properties"]
+        event["properties"] = properties
+        name = eventtype_info["name"]
+        event["name"] = lazy_fstr(name, properties)
+        title = eventtype_info["title"]
+        event["title"] = lazy_fstr(title, properties)
+        description = eventtype_info["description"]
+        event["description"] = lazy_fstr(description, properties)
+        self.events.append(
+            {"event_id": event_id, "title": title, "episode_ids": episode_ids}
+        )
+
+    def parse_eventtypes_feeds(self):
+        for event in self.latest_episodes.values():
+            self.parse_eventtype_feed(event)
+
+    def get_events(self):
+        return self.events
 
     def generate_dataset(
         self,
         event,
     ):
         """ """
-        properties = event["properties"]
-        title = event["title"]
+        event_id = event["event_id"]
+        episode = self.latest_episodes[event_id]
+        properties = episode["properties"]
+        name = episode["name"]
+        title = episode["title"]
         countryiso = properties["iso3"]
         countryname = Country.get_country_name_from_iso3(countryiso)
+        slugified_name = slugify(f"{countryname}{name[3:]}")
         title = f"{countryname}{title[3:]}"
         logger.info(f"Creating dataset: {title}")
-        slugified_name = slugify(title)
         dataset = Dataset(
             {
                 "name": slugified_name,
                 "title": title,
-                "notes": event["description"],
+                "notes": episode["description"],
             }
         )
         dataset.set_maintainer("196196be-6037-4488-8b71-d786adf4c081")
@@ -73,14 +137,15 @@ class ADAM:
         dataset.set_expected_update_frequency("Never")
         dataset.set_subnational(True)
         dataset.add_country_location(countryiso)
-        event_type = event["type"]
+        event_type = episode["event_type"]
         tags = [event_type]
         from_date = properties.get("from_date")
         to_date = properties.get("to_date")
+        published_at = properties["published_at"]
         if from_date and to_date:
             dataset.set_reference_period(from_date, to_date)
         else:
-            dataset.set_reference_period(properties["published_at"])
+            dataset.set_reference_period(published_at)
 
         def add_resource(url, description):
             filename, extension = get_filename_extension_from_url(url)
@@ -95,6 +160,7 @@ class ADAM:
                 resource.set_file_type("shp")
             else:
                 resource.set_file_type(extension[1:])
+            resource.set_date_data_updated(published_at)
             dataset.add_update_resource(resource)
 
         shape_url = properties["url"].get("shapefile")

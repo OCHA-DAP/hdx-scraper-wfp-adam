@@ -11,6 +11,7 @@ from hdx.api.configuration import Configuration
 from hdx.api.locations import Locations
 from hdx.data.vocabulary import Vocabulary
 from hdx.location.country import Country
+from hdx.utilities.dateparse import parse_date
 from hdx.utilities.downloader import Download
 from hdx.utilities.path import temp_dir
 from hdx.utilities.retriever import Retrieve
@@ -34,8 +35,9 @@ class TestADAM:
         Country.countriesdata(use_live=False)
         Locations.set_validlocations(
             [
-                {"name": "fji", "title": "fji"},
-                {"name": "mdg", "title": "mdg"},
+                {"name": "vut", "title": "vut"},
+                {"name": "slv", "title": "slv"},
+                {"name": "chn", "title": "chn"},
             ]
         )
         configuration = Configuration.read()
@@ -64,80 +66,80 @@ class TestADAM:
         ) as folder:
             with Download() as downloader:
                 retriever = Retrieve(downloader, folder, fixtures, folder, False, True)
-                adam = ADAM(configuration, retriever)
-                event_types = configuration["event_types"]
-                all_events = []
-                for event_type in event_types:
-                    events = adam.parse_feed(
-                        event_type, datetime(2020, 1, 1, 0, 0, tzinfo=timezone.utc)
-                    )
-                    all_events.extend(events)
-                assert len(all_events) == 40
+                today = parse_date("2023-07-27")
+                adam = ADAM(configuration, retriever, today)
+                adam.parse_feed(parse_date("2023-01-01"))
+                adam.parse_eventtypes_feeds()
+                events = adam.get_events()
+                assert len(events) == 66
 
-                dataset, showcases = adam.generate_dataset(all_events[3])
+                dataset, showcases = adam.generate_dataset(events[0])
                 assert dataset is None
 
-                dataset, showcases = adam.generate_dataset(all_events[2])
+                dataset, showcases = adam.generate_dataset(events[2])
                 assert dataset == {
-                    "name": "fiji-earthquake-6-6m-apr-2023",
-                    "title": "Fiji: Earthquake - 6.6M - Apr 2023",
-                    "notes": "A magnitude 6.6 earthquake at 562.474 depth occurred on Apr 18 2023 in South of the Fiji Islands. It impacted 0 people. The epicentre was at latitude -22.2844 longitude 179.3905.",
-                    "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
-                    "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
+                    "customviz": [
+                        {
+                            "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/eq_us7000kgpb/eq_us7000kgpb.jpg"
+                        }
+                    ],
                     "data_update_frequency": "-1",
+                    "dataset_date": "[2023-07-19T00:00:00 TO 2023-07-19T00:00:00]",
+                    "groups": [{"name": "slv"}],
+                    "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
+                    "name": "el-salvador-earthquake-eq-us7000kgpb",
+                    "notes": "A magnitude 6.5 earthquake at 69.727 depth occurred on Jul 19 2023 "
+                    "in 43km S of Intipucá. It impacted 37502 people. The epicentre was "
+                    "at latitude 12.814 longitude -88.1265.",
+                    "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
                     "subnational": "1",
-                    "groups": [{"name": "fji"}],
-                    "dataset_date": "[2023-04-18T00:00:00 TO 2023-04-18T00:00:00]",
                     "tags": [
                         {
                             "name": "affected population",
                             "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                         }
                     ],
-                    "customviz": [
-                        {
-                            "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/04/eq_us6000k587/eq_us6000k587.jpg"
-                        }
-                    ],
+                    "title": "El Salvador: Earthquake - 6.5M - Jul 2023",
                 }
                 resources = dataset.get_resources()
                 assert resources == [
                     {
-                        "name": "sm_us6000k587_pop_estimation.xlsx",
-                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/04/sm_us6000k587/sm_us6000k587_pop_estimation.xlsx",
                         "description": "Population Estimation",
                         "format": "xlsx",
+                        "last_modified": "2023-07-19T00:00:00",
+                        "name": "sm_us7000kgpb_pop_estimation.xlsx",
                         "resource_type": "api",
+                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/sm_us7000kgpb/sm_us7000kgpb_pop_estimation.xlsx",
                         "url_type": "api",
                     }
                 ]
                 assert showcases == [
                     {
-                        "name": "fiji-earthquake-6-6m-apr-2023-shake-map-showcase",
-                        "title": "Shake Map",
+                        "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/sm_us7000kgpb/sm_us7000kgpb.jpg",
+                        "name": "el-salvador-earthquake-eq-us7000kgpb-shake-map-showcase",
                         "notes": "Shake Map",
-                        "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/04/sm_us6000k587/sm_us6000k587.jpg",
-                        "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/04/sm_us6000k587/sm_us6000k587.jpg",
                         "tags": [
                             {
                                 "name": "affected population",
                                 "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                             }
                         ],
+                        "title": "Shake Map",
+                        "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/sm_us7000kgpb/sm_us7000kgpb.jpg",
                     }
                 ]
 
-                dataset, showcases = adam.generate_dataset(all_events[30])
+                dataset, showcases = adam.generate_dataset(events[1])
                 assert dataset == {
-                    "name": "madagascar-cyclone-category-1-mar-2023",
-                    "title": "Madagascar: Cyclone - Category 1 - Mar 2023",
-                    "notes": "A cyclone (category 1) during the period Feb 06 2023-Mar 12 2023 in Mozambique, Madagascar. It impacted 1327678 people.",
-                    "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
-                    "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
                     "data_update_frequency": "-1",
+                    "dataset_date": "[2023-07-21T00:00:00 TO 2023-07-28T23:59:59]",
+                    "groups": [{"name": "chn"}],
+                    "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
+                    "name": "china-cyclone-1000985",
+                    "notes": "A cyclone (category 1) during the period Jul 21 2023-Jul 28 2023 in "
+                    "China, Philippines. It impacted 23921068 people.",
+                    "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
                     "subnational": "1",
-                    "groups": [{"name": "mdg"}],
-                    "dataset_date": "[2023-02-06T00:00:00 TO 2023-03-12T23:59:59]",
                     "tags": [
                         {
                             "name": "geodata",
@@ -148,33 +150,34 @@ class TestADAM:
                             "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                         },
                     ],
+                    "title": "China: Cyclone - Category 1 - Jul 2023",
                 }
                 resources = dataset.get_resources()
                 assert resources == [
                     {
-                        "name": "ADAM_TS_1000961_60_shp.zip",
-                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/03/1000961_60/ADAM_TS_1000961_60_shp.zip",
                         "description": "Shape File",
                         "format": "shp",
+                        "last_modified": "2023-07-28T00:00:00",
+                        "name": "ADAM_TS_1000985_28_shp.zip",
                         "resource_type": "api",
+                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/ADAM_TS_1000985_28_shp.zip",
                         "url_type": "api",
                     },
                     {
-                        "name": "ADAM_TS_1000961_60_pop_estimation.xlsx",
-                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/03/1000961_60/ADAM_TS_1000961_60_pop_estimation.xlsx",
                         "description": "Population Estimation",
                         "format": "xlsx",
+                        "last_modified": "2023-07-28T00:00:00",
+                        "name": "ADAM_TS_1000985_28_pop_estimation.xlsx",
                         "resource_type": "api",
+                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/ADAM_TS_1000985_28_pop_estimation.xlsx",
                         "url_type": "api",
                     },
                 ]
                 assert showcases == [
                     {
-                        "name": "madagascar-cyclone-category-1-mar-2023-wind-map-showcase",
-                        "title": "Wind Map",
+                        "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28.jpg",
+                        "name": "china-cyclone-1000985-wind-map-showcase",
                         "notes": "Wind Map",
-                        "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/03/1000961_60/adam_ts_1000961_60.jpg",
-                        "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/03/1000961_60/adam_ts_1000961_60.jpg",
                         "tags": [
                             {
                                 "name": "geodata",
@@ -185,13 +188,13 @@ class TestADAM:
                                 "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                             },
                         ],
+                        "title": "Wind Map",
+                        "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28.jpg",
                     },
                     {
-                        "name": "madagascar-cyclone-category-1-mar-2023-rainfall-map-showcase",
-                        "title": "Rainfall Map",
+                        "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28_rain5d.jpg",
+                        "name": "china-cyclone-1000985-rainfall-map-showcase",
                         "notes": "Rainfall Map",
-                        "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/03/1000961_60/adam_ts_1000961_60_rain5d.jpg",
-                        "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/03/1000961_60/adam_ts_1000961_60_rain5d.jpg",
                         "tags": [
                             {
                                 "name": "geodata",
@@ -202,5 +205,7 @@ class TestADAM:
                                 "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
                             },
                         ],
+                        "title": "Rainfall Map",
+                        "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28_rain5d.jpg",
                     },
                 ]

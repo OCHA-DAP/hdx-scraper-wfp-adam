@@ -40,15 +40,14 @@ def main(save: bool = False, use_saved: bool = False) -> None:
                 retriever = Retrieve(
                     downloader, folder, "saved_data", folder, save, use_saved
                 )
-                adam = ADAM(configuration, retriever)
-                event_types = configuration["event_types"]
-                all_events = []
-                for event_type in event_types:
-                    events = adam.parse_feed(event_type, state.get())
-                    all_events.extend(events)
-                logger.info(f"Number of datasets: {len(all_events)}")
+                today = now_utc()
+                adam = ADAM(configuration, retriever, today)
+                adam.parse_feed(state.get())
+                adam.parse_eventtypes_feeds()
+                events = adam.get_events()
+                logger.info(f"Number of datasets: {len(events)}")
 
-                for _, event in progress_storing_folder(info, all_events, "id"):
+                for _, event in progress_storing_folder(info, events, "event_id"):
                     dataset, showcases = adam.generate_dataset(event)
                     if not dataset:
                         continue
@@ -71,7 +70,6 @@ def main(save: bool = False, use_saved: bool = False) -> None:
 if __name__ == "__main__":
     facade(
         main,
-        hdx_site="feature",
         user_agent_config_yaml=join(expanduser("~"), ".useragents.yml"),
         user_agent_lookup=lookup,
         project_config_yaml=join("config", "project_configuration.yml"),
