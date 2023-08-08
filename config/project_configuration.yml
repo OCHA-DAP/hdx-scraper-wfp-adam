@@ -1,19 +1,26 @@
 # Collector specific configuration
 url: "https://x8qclqysv7.execute-api.eu-west-1.amazonaws.com/dev/events/"
 event_types:
-  earthquakes:
-    prefix_index: 0
-    event_id_index: 1
-    episode_id_index: ~
-    allowed_prefixes:
-      - "eq"
-    name: "{properties['iso3']}-earthquake-{properties['event_id']}"
-    title: "{properties['iso3']}: Earthquake - {properties['mag']}M - {parse_date(properties['published_at']).strftime('%b %Y')}"
-    description: "A magnitude {properties['mag']} earthquake at {properties['depth']} depth occurred on {parse_date(properties['published_at']).strftime('%b %d %Y')} in {properties['place']}. It impacted {properties['population_impact']} people. The epicentre was at latitude {properties['latitude']} longitude {properties['longitude']}."
-  cyclones:
+#  earthquakes:
+#    prefix_index: 0
+#    event_id_index: 1
+#    episode_id_index: ~
+#    allowed_prefixes:
+#      - "eq"
+#    name: "{properties['iso3']}-earthquake-{properties['event_id']}"
+#    title: "{properties['iso3']}: Earthquake - {properties['mag']}M - {parse_date(properties['published_at']).strftime('%b %Y')}"
+#    description: "A magnitude {properties['mag']} earthquake at {properties['depth']} depth occurred on {parse_date(properties['published_at']).strftime('%b %d %Y')} in {properties['place']}. It impacted {properties['population_impact']} people. The epicentre was at latitude {properties['latitude']} longitude {properties['longitude']}."
+#  cyclones:
+#    prefix_index: ~
+#    event_id_index: 0
+#    episode_id_index: 1
+#    name: "{properties['iso3']}-cyclone-{properties['event_id']}"
+#    title: "{properties['iso3']}: Cyclone - {properties['storm_status']} - {parse_date(properties['published_at']).strftime('%b %Y')}"
+#    description: "A cyclone ({properties['storm_status'].lower()}) during the period {parse_date(properties['from_date']).strftime('%b %d %Y')}-{parse_date(properties['to_date']).strftime('%b %d %Y')} in {properties['countries']}. It impacted {properties['population_impact']} people."
+  floods:
     prefix_index: ~
     event_id_index: 0
-    episode_id_index: 1
-    name: "{properties['iso3']}-cyclone-{properties['event_id']}"
-    title: "{properties['iso3']}: Cyclone - {properties['storm_status']} - {parse_date(properties['published_at']).strftime('%b %Y')}"
-    description: "A cyclone ({properties['storm_status'].lower()}) during the period {parse_date(properties['from_date']).strftime('%b %d %Y')}-{parse_date(properties['to_date']).strftime('%b %d %Y')} in {properties['countries']}. It impacted {properties['population_impact']} people."
+    episode_id_index: ~
+    name: "{properties['iso3']}-flood-{properties['eventid']}"
+    title: "{properties['iso3']}: Flood - {int(properties['flood_area'])} hectares - {parse_date(properties['effective_date']).strftime('%b %Y')}"
+    description: "A flood affecting {int(properties['flood_area'])} hectares including {int(properties['fl_croplnd'])} cropland areas on {parse_date(properties['effective_date']).strftime('%b %d %Y')} in {properties['country']}. It impacted {properties['population']} people."

@@ -137,7 +137,7 @@ class ADAM:
         tags = [event_type]
         from_date = properties.get("from_date")
         to_date = properties.get("to_date")
-        published_at = properties["published_at"]
+        published_at = properties.get("published_at", properties.get("effective_date"))
         if from_date and to_date:
             dataset.set_reference_period(from_date, to_date)
         else:
@@ -159,8 +159,13 @@ class ADAM:
             resource.set_date_data_updated(published_at)
             dataset.add_update_resource(resource)
 
-        shape_url = properties["url"].get("shapefile")
-        url = properties["url"].get("population")
+        url_dict = properties.get("url")
+        if url_dict:
+            shape_url = url_dict.get("shapefile")
+            url = url_dict.get("population")
+        else:
+            shape_url = None
+            url = properties["dashboard_url"]
         if not shape_url and not url:
             logger.error(f"{title} has no data files for dataset!")
             return None, None
@@ -174,7 +179,10 @@ class ADAM:
 
         def view_image(url_type):
             viewer_url = "https://mcarans.github.io/view-images/#"
-            map_url = properties["url"].get(url_type)
+            if url_dict:
+                map_url = url_dict.get(url_type)
+            else:
+                map_url = url
             if not map_url:
                 return None, None
             return f"{viewer_url}{map_url}", map_url
@@ -202,14 +210,15 @@ class ADAM:
             else:
                 add_showcase("Map", "Map", url)
 
-        url = properties["url"].get("shakemap")
-        if url:
-            add_showcase("Shake Map", "Shake Map", url)
-        url = properties["url"].get("wind")
-        if url:
-            add_showcase("Wind Map", "Wind Map", url)
-        url = properties["url"].get("rainfall")
-        if url:
-            add_showcase("Rainfall Map", "Rainfall Map", url)
+        if url_dict:
+            url = url_dict.get("shakemap")
+            if url:
+                add_showcase("Shake Map", "Shake Map", url)
+            url = url_dict.get("wind")
+            if url:
+                add_showcase("Wind Map", "Wind Map", url)
+            url = url_dict.get("rainfall")
+            if url:
+                add_showcase("Rainfall Map", "Rainfall Map", url)
 
         return dataset, showcases
