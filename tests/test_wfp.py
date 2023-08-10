@@ -105,11 +105,11 @@ class TestADAM:
                 assert resources == [
                     {
                         "description": "Population Estimation",
-                        "format": "xlsx",
+                        "format": "csv",
                         "last_modified": "2023-07-19T00:00:00",
-                        "name": "sm_us7000kgpb_pop_estimation.xlsx",
+                        "name": "sm_us7000kgpb_pop_estimation.csv",
                         "resource_type": "api",
-                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/sm_us7000kgpb/sm_us7000kgpb_pop_estimation.xlsx",
+                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/sm_us7000kgpb/sm_us7000kgpb_pop_estimation.csv",
                         "url_type": "api",
                     }
                 ]
@@ -165,11 +165,11 @@ class TestADAM:
                     },
                     {
                         "description": "Population Estimation",
-                        "format": "xlsx",
+                        "format": "csv",
                         "last_modified": "2023-07-28T00:00:00",
-                        "name": "ADAM_TS_1000985_28_pop_estimation.xlsx",
+                        "name": "ADAM_TS_1000985_28_pop_estimation.csv",
                         "resource_type": "api",
-                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/ADAM_TS_1000985_28_pop_estimation.xlsx",
+                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/ADAM_TS_1000985_28_pop_estimation.csv",
                         "url_type": "api",
                     },
                 ]

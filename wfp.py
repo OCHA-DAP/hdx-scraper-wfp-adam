@@ -169,6 +169,7 @@ class ADAM:
             tags.append("geodata")
 
         if url:
+            url = url.replace("xlsx", "csv")
             add_resource(url, "Population Estimation")
             tags.append("affected population")
 
