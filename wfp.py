@@ -159,8 +159,9 @@ class ADAM:
             resource.set_date_data_updated(published_at)
             dataset.add_update_resource(resource)
 
-        shape_url = properties["url"].get("shapefile")
-        url = properties["url"].get("population")
+        url_dict = properties["url"]
+        shape_url = url_dict.get("shapefile")
+        url = url_dict.get("population_csv", url_dict.get("population"))
         if not shape_url and not url:
             logger.error(f"{title} has no data files for dataset!")
             return None, None
@@ -169,13 +170,12 @@ class ADAM:
             tags.append("geodata")
 
         if url:
-            url = url.replace("xlsx", "csv")
             add_resource(url, "Population Estimation")
             tags.append("affected population")
 
         def view_image(url_type):
             viewer_url = "https://mcarans.github.io/view-images/#"
-            map_url = properties["url"].get(url_type)
+            map_url = url_dict.get(url_type)
             if not map_url:
                 return None, None
             return f"{viewer_url}{map_url}", map_url
@@ -203,13 +203,13 @@ class ADAM:
             else:
                 add_showcase("Map", "Map", url)
 
-        url = properties["url"].get("shakemap")
+        url = url_dict.get("shakemap")
         if url:
             add_showcase("Shake Map", "Shake Map", url)
-        url = properties["url"].get("wind")
+        url = url_dict.get("wind")
         if url:
             add_showcase("Wind Map", "Wind Map", url)
-        url = properties["url"].get("rainfall")
+        url = url_dict.get("rainfall")
         if url:
             add_showcase("Rainfall Map", "Rainfall Map", url)
 
