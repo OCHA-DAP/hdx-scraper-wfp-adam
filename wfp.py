@@ -40,6 +40,15 @@ class ADAM:
         start_date = previous_build_date.date().isoformat()
         url = f"{url}feed?start_date={start_date}&end_date={self.today}"
         for event in self.retriever.download_json(url):
+            countryiso = event["eventISO3"]
+            if not countryiso:
+                logger.error(f"Blank eventISO3!")
+                continue
+            countryinfo = Country.get_country_info_from_iso3(countryiso)
+            income_level = countryinfo['#indicator+incomelevel']
+            if income_level.lower() == "high":
+                logger.info(f"ignoring high income country {countryiso}!")
+                continue
             published = parse_date(event["pubDate"])
             if published <= previous_build_date:
                 continue
@@ -198,19 +207,23 @@ class ADAM:
 
         preview_url, url = view_image("map")
         if url:
-            if not shape_url:
-                dataset["customviz"] = [{"url": preview_url}]
-            else:
-                add_showcase("Map", "Map", url)
+            dataset["customviz"] = [{"url": preview_url}]
+            add_showcase("Map", "Map", url)
 
         url = url_dict.get("shakemap")
         if url:
+            if dataset.get("customviz") is None:
+                dataset["customviz"] = [{"url": preview_url}]
             add_showcase("Shake Map", "Shake Map", url)
-        url = url_dict.get("wind")
+        preview_url, url = view_image("wind")
         if url:
+            if dataset.get("customviz") is None:
+                dataset["customviz"] = [{"url": preview_url}]
             add_showcase("Wind Map", "Wind Map", url)
         url = url_dict.get("rainfall")
         if url:
+            if dataset.get("customviz") is None:
+                dataset["customviz"] = [{"url": preview_url}]
             add_showcase("Rainfall Map", "Rainfall Map", url)
 
         return dataset, showcases

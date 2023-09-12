@@ -71,7 +71,7 @@ class TestADAM:
                 adam.parse_feed(parse_date("2023-01-01"))
                 adam.parse_eventtypes_feeds()
                 events = adam.get_events()
-                assert len(events) == 66
+                assert len(events) == 58
 
                 dataset, showcases = adam.generate_dataset(events[0])
                 assert dataset is None
@@ -115,6 +115,14 @@ class TestADAM:
                 ]
                 assert showcases == [
                     {
+                        'image_url': 'https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/eq_us7000kgpb/eq_us7000kgpb.jpg',
+                        'name': 'el-salvador-earthquake-eq-us7000kgpb-map-showcase',
+                        'notes': 'Map',
+                        'tags': [{'name': 'affected population',
+                                  'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
+                        'title': 'Map',
+                        'url': 'https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/eq_us7000kgpb/eq_us7000kgpb.jpg'},
+                    {
                         "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/sm_us7000kgpb/sm_us7000kgpb.jpg",
                         "name": "el-salvador-earthquake-eq-us7000kgpb-shake-map-showcase",
                         "notes": "Shake Map",
@@ -131,6 +139,8 @@ class TestADAM:
 
                 dataset, showcases = adam.generate_dataset(events[1])
                 assert dataset == {
+                    'customviz': [{
+                                      'url': 'https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28.jpg'}],
                     "data_update_frequency": "-1",
                     "dataset_date": "[2023-07-21T00:00:00 TO 2023-07-28T23:59:59]",
                     "groups": [{"name": "chn"}],
