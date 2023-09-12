@@ -85,6 +85,7 @@ class TestADAM:
                     ],
                     "data_update_frequency": "-1",
                     "dataset_date": "[2023-07-19T00:00:00 TO 2023-07-19T00:00:00]",
+                    "dataset_preview": "no_preview",
                     "groups": [{"name": "slv"}],
                     "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
                     "name": "el-salvador-earthquake-eq-us7000kgpb",
@@ -104,6 +105,7 @@ class TestADAM:
                 resources = dataset.get_resources()
                 assert resources == [
                     {
+                        "dataset_preview_enabled": "False",
                         "description": "Population Estimation",
                         "format": "xlsx",
                         "last_modified": "2023-07-19T00:22:07.000000",
@@ -115,13 +117,18 @@ class TestADAM:
                 ]
                 assert showcases == [
                     {
-                        'image_url': 'https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/eq_us7000kgpb/eq_us7000kgpb.jpg',
-                        'name': 'el-salvador-earthquake-eq-us7000kgpb-map-showcase',
-                        'notes': 'Map',
-                        'tags': [{'name': 'affected population',
-                                  'vocabulary_id': '4e61d464-4943-4e97-973a-84673c1aaa87'}],
-                        'title': 'Map',
-                        'url': 'https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/eq_us7000kgpb/eq_us7000kgpb.jpg'},
+                        "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/eq_us7000kgpb/eq_us7000kgpb.jpg",
+                        "name": "el-salvador-earthquake-eq-us7000kgpb-map-showcase",
+                        "notes": "Map",
+                        "tags": [
+                            {
+                                "name": "affected population",
+                                "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
+                            }
+                        ],
+                        "title": "Map",
+                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/eq_us7000kgpb/eq_us7000kgpb.jpg",
+                    },
                     {
                         "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/sm_us7000kgpb/sm_us7000kgpb.jpg",
                         "name": "el-salvador-earthquake-eq-us7000kgpb-shake-map-showcase",
@@ -134,15 +141,19 @@ class TestADAM:
                         ],
                         "title": "Shake Map",
                         "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/07/sm_us7000kgpb/sm_us7000kgpb.jpg",
-                    }
+                    },
                 ]
 
                 dataset, showcases = adam.generate_dataset(events[1])
                 assert dataset == {
-                    'customviz': [{
-                                      'url': 'https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28.jpg'}],
+                    "customviz": [
+                        {
+                            "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/07/1000985_28/adam_ts_1000985_28.jpg"
+                        }
+                    ],
                     "data_update_frequency": "-1",
                     "dataset_date": "[2023-07-21T00:00:00 TO 2023-07-28T23:59:59]",
+                    "dataset_preview": "no_preview",
                     "groups": [{"name": "chn"}],
                     "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
                     "name": "china-cyclone-1000985",
@@ -165,6 +176,7 @@ class TestADAM:
                 resources = dataset.get_resources()
                 assert resources == [
                     {
+                        "dataset_preview_enabled": "False",
                         "description": "Shape File",
                         "format": "shp",
                         "last_modified": "2023-07-28T07:36:54.000000",
@@ -174,6 +186,7 @@ class TestADAM:
                         "url_type": "api",
                     },
                     {
+                        "dataset_preview_enabled": "False",
                         "description": "Population Estimation",
                         "format": "xlsx",
                         "last_modified": "2023-07-28T07:36:54.000000",
