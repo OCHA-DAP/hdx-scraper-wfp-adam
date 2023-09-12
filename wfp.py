@@ -225,5 +225,5 @@ class ADAM:
             if dataset.get("customviz") is None:
                 dataset["customviz"] = [{"url": preview_url}]
             add_showcase("Rainfall Map", "Rainfall Map", url)
-
+        dataset.preview_off()
         return dataset, showcases
