@@ -94,6 +94,9 @@ class ADAM:
         else:
             episode_ids = None
             properties = json["properties"]
+        countryiso = properties["iso3"]
+        if not countryiso:
+            properties["iso3"] = event["eventISO3"]
         event["properties"] = properties
         event_id = event["event_id"]
         event_type = event["event_type"]
