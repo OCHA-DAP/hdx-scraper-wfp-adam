@@ -8,6 +8,9 @@ Reads WFP ADAM data and creates datasets.
 """
 import logging
 import re
+from os import rename
+from os.path import basename, splitext
+from zipfile import ZipFile
 
 from hdx.data.dataset import Dataset
 from hdx.data.resource import Resource
@@ -27,10 +30,11 @@ def lazy_fstr(template, properties):
 class ADAM:
     regex = re.compile(r".*/(.*)/(.*)")
 
-    def __init__(self, configuration, retriever, today):
+    def __init__(self, configuration, retriever, today, folder):
         self.configuration = configuration
         self.retriever = retriever
         self.today = today.date().isoformat()
+        self.folder = folder
         self.last_build_date = None
         self.latest_episodes = {}
         self.events = []
@@ -45,7 +49,7 @@ class ADAM:
                 logger.error(f"Blank eventISO3!")
                 continue
             countryinfo = Country.get_country_info_from_iso3(countryiso)
-            income_level = countryinfo['#indicator+incomelevel']
+            income_level = countryinfo["#indicator+incomelevel"]
             if income_level.lower() == "high":
                 logger.info(f"ignoring high income country {countryiso}!")
                 continue
@@ -97,8 +101,10 @@ class ADAM:
         countryiso = properties["iso3"]
         if not countryiso:
             properties["iso3"] = event["eventISO3"]
-        event["properties"] = properties
         event_id = event["event_id"]
+        if event_id not in properties:
+            properties["event_id"] = event_id
+        event["properties"] = properties
         event_type = event["event_type"]
         eventtype_info = self.configuration["event_types"].get(event_type)
         name = eventtype_info["name"]
@@ -149,41 +155,96 @@ class ADAM:
         tags = [event_type]
         from_date = properties.get("from_date")
         to_date = properties.get("to_date")
-        published_at = properties["published_at"]
+        published_at = properties.get("published_at", properties.get("effective_date"))
         if from_date and to_date:
             dataset.set_reference_period(from_date, to_date)
         else:
             dataset.set_reference_period(published_at)
 
-        def add_resource(url, description):
-            filename, extension = get_filename_extension_from_url(url)
+        def add_resource(path, description):
+            name = basename(path)
+            filename, extension = splitext(name)
             resource = Resource(
                 {
-                    "name": f"{filename}{extension}",
-                    "url": url,
+                    "name": name,
                     "description": description,
                 }
             )
             if description == "Shape File":
-                resource.set_file_type("shp")
+                extension = "shp"
             else:
-                resource.set_file_type(extension[1:])
-            resource.set_date_data_updated(published_at)
+                extension = extension[1:]
+            resource.set_file_type(extension)
+            resource.set_file_to_upload(path)
             dataset.add_update_resource(resource)
 
-        url_dict = properties["url"]
-        shape_url = url_dict.get("shapefile")
-        url = url_dict.get("population_csv", url_dict.get("population"))
-        if not shape_url and not url:
-            logger.error(f"{title} has no data files for dataset!")
-            return None, None
-        if shape_url:
-            add_resource(shape_url, "Shape File")
-            tags.append("geodata")
+        def add_resource_with_url(url, description):
+            path = self.retriever.download_file(url)
+            add_resource(path, description)
 
-        if url:
-            add_resource(url, "Population Estimation")
-            tags.append("affected population")
+        showcases = []
+
+        def add_showcase(title, description, url, image_url=None):
+            if image_url is None:
+                image_url = url
+            showcase = Showcase(
+                {
+                    "name": f"{slugified_name}-{slugify(title)}-showcase",
+                    "title": title,
+                    "notes": description,
+                    "url": url,
+                    "image_url": image_url,
+                }
+            )
+            showcase.add_tags(tags)
+            showcases.append(showcase)
+
+        analysis_output = properties.get("analysis_output")
+        if analysis_output:
+            url_dict = None
+            tags.append("geodata")
+            zippath = self.retriever.download_file(analysis_output)
+            with ZipFile(zippath, "r") as zipfile:
+                for filename in zipfile.namelist():
+                    if any(x in filename for x in ("tiff", "json", "gpkg")):
+                        path = zipfile.extract(filename, path=self.folder)
+                        if path.endswith("json"):
+                            oldpath = path
+                            path = oldpath.replace("json", "geojson")
+                            rename(oldpath, path)
+                            add_resource(path, "GeoJSON File")
+                        elif path.endswith("tiff"):
+                            add_resource(path, "GeoTIFF File")
+                        else:
+                            add_resource(path, "Geopackage File")  # pass
+            if dataset.number_of_resources() == 0:
+                logger.error(f"{title} has no data files for dataset!")
+                return None, None
+            add_showcase(
+                "Report",
+                "Report",
+                properties["dashboard_url"],
+                self.configuration["flood_image_url"],
+            )
+        else:
+            url_dict = properties["url"]
+            shape_url = url_dict.get("shapefile")
+            url = url_dict.get("population_csv", url_dict.get("population"))
+            if not shape_url and not url:
+                logger.error(f"{title} has no data files for dataset!")
+                return None, None
+            if shape_url:
+                add_resource_with_url(shape_url, "Shape File")
+                tags.append("geodata")
+
+            if url:
+                add_resource_with_url(url, "Population Estimation")
+                tags.append("affected population")
+
+        dataset.add_tags(tags)
+        dataset.preview_off()
+        if not url_dict:
+            return dataset, showcases
 
         def view_image(url_type):
             viewer_url = "https://mcarans.github.io/view-images/#"
@@ -191,22 +252,6 @@ class ADAM:
             if not map_url:
                 return None, None
             return f"{viewer_url}{map_url}", map_url
-
-        dataset.add_tags(tags)
-        showcases = []
-
-        def add_showcase(title, description, url):
-            showcase = Showcase(
-                {
-                    "name": f"{slugified_name}-{slugify(title)}-showcase",
-                    "title": title,
-                    "notes": description,
-                    "url": url,
-                    "image_url": url,
-                }
-            )
-            showcase.add_tags(tags)
-            showcases.append(showcase)
 
         preview_url, url = view_image("map")
         if url:
@@ -228,5 +273,4 @@ class ADAM:
             if dataset.get("customviz") is None:
                 dataset["customviz"] = [{"url": preview_url}]
             add_showcase("Rainfall Map", "Rainfall Map", url)
-        dataset.preview_off()
         return dataset, showcases

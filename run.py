@@ -41,7 +41,7 @@ def main(save: bool = False, use_saved: bool = False) -> None:
                     downloader, folder, "saved_data", folder, save, use_saved
                 )
                 today = now_utc()
-                adam = ADAM(configuration, retriever, today)
+                adam = ADAM(configuration, retriever, today, folder)
                 adam.parse_feed(state.get())
                 adam.parse_eventtypes_feeds()
                 events = adam.get_events()
