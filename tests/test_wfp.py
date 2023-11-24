@@ -84,11 +84,11 @@ class TestADAM:
                 assert dataset == {
                     "data_update_frequency": "-1",
                     "dataset_date": "[2023-11-14T00:00:00 TO 2023-11-14T00:00:00]",
-                    "dataset_preview": "no_preview",
+                    "dataset_preview": "resource_id",
                     "groups": [{"name": "eth"}],
                     "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
                     "name": "ethiopia-flood-fl-20231114-eth-01",
-                    "notes": "A flood covering 1016365.0 sq m on Nov 14 2023 in Ethiopia. It "
+                    "notes": "**ADAM ID: FL-20231114-ETH-01**  Flood covering 1016365.0 sq m on Nov 14 2023 in Ethiopia. It "
                     "impacted 534273 people.",
                     "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
                     "subnational": "1",
@@ -103,15 +103,7 @@ class TestADAM:
                 resources = dataset.get_resources()
                 assert resources == [
                     {
-                        "dataset_preview_enabled": "False",
-                        "description": "Geopackage File",
-                        "format": "geopackage",
-                        "name": "FL-20231114-ETH-01.gpkg",
-                        "resource_type": "file.upload",
-                        "url_type": "upload",
-                    },
-                    {
-                        "dataset_preview_enabled": "False",
+                        "dataset_preview_enabled": "True",
                         "description": "GeoJSON File",
                         "format": "geojson",
                         "name": "FL-20231114-ETH-01.geojson",
@@ -119,10 +111,23 @@ class TestADAM:
                         "url_type": "upload",
                     },
                     {
-                        "dataset_preview_enabled": "False",
                         "description": "GeoTIFF File",
                         "format": "geotiff",
                         "name": "FL-20231114-ETH-01.tiff",
+                        "resource_type": "file.upload",
+                        "url_type": "upload",
+                    },
+                    {
+                        "description": "Geopackage File",
+                        "format": "geopackage",
+                        "name": "FL-20231114-ETH-01.gpkg",
+                        "resource_type": "file.upload",
+                        "url_type": "upload",
+                    },
+                    {
+                        "description": "Metadata File",
+                        "format": "txt",
+                        "name": "metadata.txt",
                         "resource_type": "file.upload",
                         "url_type": "upload",
                     },
@@ -157,7 +162,7 @@ class TestADAM:
                     "groups": [{"name": "idn"}],
                     "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
                     "name": "indonesia-earthquake-eq-us7000l9ku",
-                    "notes": "A magnitude 6.7 earthquake at 10.0 depth occurred on Nov 08 2023 in "
+                    "notes": "**ADAM ID: eq\\_us7000l9ku**  Magnitude 6.7 earthquake at 10.0 depth occurred on Nov 08 2023 in "
                     "Banda Sea. It impacted 0 people. The epicentre was at latitude "
                     "-6.1455 longitude 129.9137.",
                     "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
@@ -223,7 +228,7 @@ class TestADAM:
                     "groups": [{"name": "phl"}],
                     "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
                     "name": "philippines-cyclone-1001032",
-                    "notes": "A cyclone (tropical depression) during the period Nov 12 2023-Nov "
+                    "notes": "**ADAM ID: 1001032\\_4**  Cyclone (tropical depression) during the period Nov 12 2023-Nov "
                     "13 2023 in . It impacted 0 people.",
                     "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
                     "subnational": "1",

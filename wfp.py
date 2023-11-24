@@ -139,11 +139,13 @@ class ADAM:
         slugified_name = slugify(f"{countryname}{name[3:]}")
         title = f"{countryname}{title[3:]}"
         logger.info(f"Creating dataset: {title}")
+        guid = episode["guid"].replace("_", "\_")
+        description = f"**ADAM ID: {guid}**  {episode['description']}"
         dataset = Dataset(
             {
                 "name": slugified_name,
                 "title": title,
-                "notes": episode["description"],
+                "notes": description,
             }
         )
         dataset.set_maintainer("196196be-6037-4488-8b71-d786adf4c081")
@@ -161,7 +163,7 @@ class ADAM:
         else:
             dataset.set_reference_period(published_at)
 
-        def add_resource(path, description):
+        def add_resource(path, description, preview=False):
             name = basename(path)
             filename, extension = splitext(name)
             resource = Resource(
@@ -177,6 +179,9 @@ class ADAM:
             resource.set_file_type(extension)
             resource.set_file_to_upload(path)
             dataset.add_update_resource(resource)
+            if preview:
+                resource.enable_dataset_preview()
+                dataset.preview_resource()
 
         def add_resource_with_url(url, description):
             path = self.retriever.download_file(url)
@@ -205,18 +210,23 @@ class ADAM:
             tags.append("geodata")
             zippath = self.retriever.download_file(analysis_output)
             with ZipFile(zippath, "r") as zipfile:
-                for filename in zipfile.namelist():
-                    if any(x in filename for x in ("tiff", "json", "gpkg")):
-                        path = zipfile.extract(filename, path=self.folder)
-                        if path.endswith("json"):
-                            oldpath = path
-                            path = oldpath.replace("json", "geojson")
-                            rename(oldpath, path)
-                            add_resource(path, "GeoJSON File")
-                        elif path.endswith("tiff"):
-                            add_resource(path, "GeoTIFF File")
-                        else:
-                            add_resource(path, "Geopackage File")  # pass
+                filenamelist = zipfile.namelist()
+                order = ["json", "tiff", "gpkg", ".txt"]
+                filenames = {x[-4:]: x for x in filenamelist if x[-4:] in order}
+                sorted_extensions = sorted(filenames, key=lambda x: order.index(x))
+                for extension in sorted_extensions:
+                    path = zipfile.extract(filenames[extension], path=self.folder)
+                    if path.endswith("json"):
+                        oldpath = path
+                        path = oldpath.replace("json", "geojson")
+                        rename(oldpath, path)
+                        add_resource(path, "GeoJSON File", preview=True)
+                    elif path.endswith("tiff"):
+                        add_resource(path, "GeoTIFF File")
+                    elif path.endswith("gpkg"):
+                        add_resource(path, "Geopackage File")
+                    else:
+                        add_resource(path, "Metadata File")
             if dataset.number_of_resources() == 0:
                 logger.error(f"{title} has no data files for dataset!")
                 return None, None
@@ -240,9 +250,9 @@ class ADAM:
             if url:
                 add_resource_with_url(url, "Population Estimation")
                 tags.append("affected population")
+            dataset.preview_off()
 
         dataset.add_tags(tags)
-        dataset.preview_off()
         if not url_dict:
             return dataset, showcases
 

@@ -9,19 +9,19 @@ event_types:
       - "eq"
     name: "{properties['iso3']}-earthquake-{properties['event_id']}"
     title: "{properties['iso3']}: Earthquake - {properties['mag']}M - {parse_date(properties['published_at']).strftime('%b %Y')}"
-    description: "A magnitude {properties['mag']} earthquake at {properties['depth']} depth occurred on {parse_date(properties['published_at']).strftime('%b %d %Y')} in {properties['place']}. It impacted {properties['population_impact']} people. The epicentre was at latitude {properties['latitude']} longitude {properties['longitude']}."
+    description: "Magnitude {properties['mag']} earthquake at {properties['depth']} depth occurred on {parse_date(properties['published_at']).strftime('%b %d %Y')} in {properties['place']}. It impacted {properties['population_impact']} people. The epicentre was at latitude {properties['latitude']} longitude {properties['longitude']}."
   cyclones:
     prefix_index: ~
     event_id_index: 0
     episode_id_index: 1
     name: "{properties['iso3']}-cyclone-{properties['event_id']}"
     title: "{properties['iso3']}: Cyclone - {properties['storm_status']} - {parse_date(properties['published_at']).strftime('%b %Y')}"
-    description: "A cyclone ({properties['storm_status'].lower()}) during the period {parse_date(properties['from_date']).strftime('%b %d %Y')}-{parse_date(properties['to_date']).strftime('%b %d %Y')} in {properties['countries']}. It impacted {properties['population_impact']} people."
+    description: "Cyclone ({properties['storm_status'].lower()}) during the period {parse_date(properties['from_date']).strftime('%b %d %Y')}-{parse_date(properties['to_date']).strftime('%b %d %Y')} in {properties['countries']}. It impacted {properties['population_impact']} people."
   floods:
     prefix_index: ~
     event_id_index: 0
     episode_id_index: ~
     name: "{properties['iso3']}-flood-{properties['event_id']}"
     title: "{properties['iso3']}: Flood - {properties['flood_area']} sq m - {parse_date(properties['effective_date']).strftime('%b %Y')}"
-    description: "A flood covering {properties['flood_area']} sq m on {parse_date(properties['effective_date']).strftime('%b %d %Y')} in {properties['country']}. It impacted {properties['population']} people."
+    description: "Flood covering {properties['flood_area']} sq m on {parse_date(properties['effective_date']).strftime('%b %d %Y')} in {properties['country']}. It impacted {properties['population']} people."
 flood_image_url: "https://multimedia.wfp.org/AssetLink/5c46vkj768qd0n6e12327eq14y857i8h.jpg"
