@@ -42,8 +42,7 @@ class ADAM:
     def parse_feed(self, previous_build_date):
         url = self.configuration["url"]
         start_date = previous_build_date.date().isoformat()
-        #        url = f"{url}feed?start_date={start_date}&end_date={self.today}"
-        url = f"{url}feed?start_date={start_date}&end_date=2023-03-01"
+        url = f"{url}feed?start_date={start_date}&end_date={self.today}"
         for event in self.retriever.download_json(url):
             countryiso = event["eventISO3"]
             if not countryiso:
