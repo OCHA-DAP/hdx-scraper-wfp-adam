@@ -16,8 +16,8 @@ from hdx.data.dataset import Dataset
 from hdx.data.resource import Resource
 from hdx.data.showcase import Showcase
 from hdx.location.country import Country
+from hdx.utilities.base_downloader import DownloadError
 from hdx.utilities.dateparse import parse_date
-from hdx.utilities.path import get_filename_extension_from_url
 from slugify import slugify
 
 logger = logging.getLogger(__name__)
@@ -42,7 +42,8 @@ class ADAM:
     def parse_feed(self, previous_build_date):
         url = self.configuration["url"]
         start_date = previous_build_date.date().isoformat()
-        url = f"{url}feed?start_date={start_date}&end_date={self.today}"
+        #        url = f"{url}feed?start_date={start_date}&end_date={self.today}"
+        url = f"{url}feed?start_date={start_date}&end_date=2023-03-01"
         for event in self.retriever.download_json(url):
             countryiso = event["eventISO3"]
             if not countryiso:
@@ -184,8 +185,13 @@ class ADAM:
                 dataset.preview_resource()
 
         def add_resource_with_url(url, description):
-            path = self.retriever.download_file(url)
-            add_resource(path, description)
+            try:
+                path = self.retriever.download_file(url)
+                add_resource(path, description)
+                return True
+            except DownloadError as ex:
+                logger.exception(ex)
+                return False
 
         showcases = []
 
@@ -204,32 +210,37 @@ class ADAM:
             showcase.add_tags(tags)
             showcases.append(showcase)
 
+        success = True
         analysis_output = properties.get("analysis_output")
         if analysis_output:
             url_dict = None
-            tags.append("geodata")
-            zippath = self.retriever.download_file(analysis_output)
-            with ZipFile(zippath, "r") as zipfile:
-                filenamelist = zipfile.namelist()
-                order = ["json", "tiff", "gpkg", ".txt"]
-                filenames = {x[-4:]: x for x in filenamelist if x[-4:] in order}
-                sorted_extensions = sorted(filenames, key=lambda x: order.index(x))
-                for extension in sorted_extensions:
-                    path = zipfile.extract(filenames[extension], path=self.folder)
-                    if path.endswith("json"):
-                        oldpath = path
-                        path = oldpath.replace("json", "geojson")
-                        rename(oldpath, path)
-                        add_resource(path, "GeoJSON File", preview=True)
-                    elif path.endswith("tiff"):
-                        add_resource(path, "GeoTIFF File")
-                    elif path.endswith("gpkg"):
-                        add_resource(path, "Geopackage File")
-                    else:
-                        add_resource(path, "Metadata File")
+            try:
+                zippath = self.retriever.download_file(analysis_output)
+                with ZipFile(zippath, "r") as zipfile:
+                    filenamelist = zipfile.namelist()
+                    order = ["json", "tiff", "gpkg", ".txt"]
+                    filenames = {x[-4:]: x for x in filenamelist if x[-4:] in order}
+                    sorted_extensions = sorted(filenames, key=lambda x: order.index(x))
+                    for extension in sorted_extensions:
+                        path = zipfile.extract(filenames[extension], path=self.folder)
+                        if path.endswith("json"):
+                            oldpath = path
+                            path = oldpath.replace("json", "geojson")
+                            rename(oldpath, path)
+                            add_resource(path, "GeoJSON File", preview=True)
+                        elif path.endswith("tiff"):
+                            add_resource(path, "GeoTIFF File")
+                        elif path.endswith("gpkg"):
+                            add_resource(path, "Geopackage File")
+                        else:
+                            add_resource(path, "Metadata File")
+            except DownloadError as ex:
+                logger.exception(ex)
+                success = False
             if dataset.number_of_resources() == 0:
                 logger.error(f"{title} has no data files for dataset!")
                 return None, None
+            tags.append("geodata")
             add_showcase(
                 "Report",
                 "Report",
@@ -244,14 +255,15 @@ class ADAM:
                 logger.error(f"{title} has no data files for dataset!")
                 return None, None
             if shape_url:
-                add_resource_with_url(shape_url, "Shape File")
+                success = add_resource_with_url(shape_url, "Shape File")
                 tags.append("geodata")
 
             if url:
-                add_resource_with_url(url, "Population Estimation")
+                success = add_resource_with_url(url, "Population Estimation")
                 tags.append("affected population")
             dataset.preview_off()
-
+        if not success:
+            return None, None
         dataset.add_tags(tags)
         if not url_dict:
             return dataset, showcases
