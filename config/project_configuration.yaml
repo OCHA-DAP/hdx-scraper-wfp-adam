@@ -1,5 +1,5 @@
 # Collector specific configuration
-url: "https://x8qclqysv7.execute-api.eu-west-1.amazonaws.com/dev/events/"
+url: "https://exie6ocssxnczub3aslzanna540gfdjs.lambda-url.eu-west-1.on.aws/events/"
 event_types:
   earthquakes:
     prefix_index: 0

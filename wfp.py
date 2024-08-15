@@ -159,9 +159,9 @@ class ADAM:
         to_date = properties.get("to_date")
         published_at = properties.get("published_at", properties.get("effective_date"))
         if from_date and to_date:
-            dataset.set_reference_period(from_date, to_date)
+            dataset.set_time_period(from_date, to_date)
         else:
-            dataset.set_reference_period(published_at)
+            dataset.set_time_period(published_at)
 
         def add_resource(path, description, preview=False):
             name = basename(path)

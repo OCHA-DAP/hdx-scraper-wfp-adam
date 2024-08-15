@@ -33,7 +33,7 @@ class TestADAM:
         Configuration._create(
             hdx_read_only=True,
             user_agent="test",
-            project_config_yaml=join("config", "project_configuration.yml"),
+            project_config_yaml=join("config", "project_configuration.yaml"),
         )
         UserAgent.set_global("test")
         Country.countriesdata(use_live=False)
