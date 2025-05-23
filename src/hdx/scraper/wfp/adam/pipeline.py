@@ -6,11 +6,14 @@ WFP ADAM:
 Reads WFP ADAM data and creates datasets.
 
 """
+
 import logging
 import re
 from os import rename
 from os.path import basename, splitext
 from zipfile import ZipFile
+
+from slugify import slugify
 
 from hdx.data.dataset import Dataset
 from hdx.data.resource import Resource
@@ -18,7 +21,6 @@ from hdx.data.showcase import Showcase
 from hdx.location.country import Country
 from hdx.utilities.base_downloader import DownloadError
 from hdx.utilities.dateparse import parse_date
-from slugify import slugify
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +29,7 @@ def lazy_fstr(template, properties):
     return eval(f'f"""{template}"""')
 
 
-class ADAM:
+class Pipeline:
     regex = re.compile(r".*/(.*)/(.*)")
 
     def __init__(self, configuration, retriever, today, folder):
@@ -39,29 +41,39 @@ class ADAM:
         self.latest_episodes = {}
         self.events = []
 
-    def parse_feed(self, previous_build_date):
-        url = self.configuration["url"]
+    def get_all_events(self, previous_build_date):
+        base_url = self.configuration["url"]
         start_date = previous_build_date.date().isoformat()
-        url = f"{url}feed?start_date={start_date}&end_date={self.today}"
-        for event in self.retriever.download_json(url):
-            countryiso = event["eventISO3"]
-            if not countryiso:
-                logger.error(f"Blank eventISO3!")
+        base_url = (
+            f"{base_url}?startDate={start_date}&endDate={self.today}&items_per_page=500"
+        )
+        json = self.retriever.download_json(base_url)
+        events = json["events"]
+        pages = json["pages"]
+        for page in range(2, pages + 1):
+            url = f"{base_url}&page={page}"
+            json = self.retriever.download_json(url)
+            events.extend(json["events"])
+        return events
+
+    def parse_feed(self, previous_build_date):
+        for event in self.get_all_events(previous_build_date):
+            countryiso3 = event["iso3"]
+            if not countryiso3:
+                logger.error("Blank iso3!")
                 continue
-            countryinfo = Country.get_country_info_from_iso3(countryiso)
+            countryinfo = Country.get_country_info_from_iso3(countryiso3)
             income_level = countryinfo["#indicator+incomelevel"]
             if income_level.lower() == "high":
-                logger.info(f"ignoring high income country {countryiso}!")
+                logger.info(f"ignoring high income country {countryiso3}!")
                 continue
             published = parse_date(event["pubDate"])
             if published <= previous_build_date:
                 continue
-            m = self.regex.match(event["eventDetails"])
-            event_type = m.group(1)
+            event_type = event["eventType"]
             eventtype_info = self.configuration["event_types"].get(event_type)
             if not eventtype_info:
                 continue
-            event["event_type"] = event_type
             guid = event["guid"]
             parts = guid.split("_")
             event_id_index = eventtype_info["event_id_index"]
@@ -69,8 +81,6 @@ class ADAM:
             prefix_index = eventtype_info["prefix_index"]
             if prefix_index is not None:
                 prefix = parts[prefix_index]
-                if prefix not in eventtype_info["allowed_prefixes"]:
-                    continue
                 event_id = f"{prefix}_{event_id}"
             episode_id_index = eventtype_info["episode_id_index"]
             if episode_id_index is None:
@@ -86,7 +96,7 @@ class ADAM:
                 self.latest_episodes[event_id] = event
 
     def parse_eventtype_feed(self, event):
-        json = self.retriever.download_json(event["eventDetails"])
+        json = self.retriever.download_json(event["details"])
         features = json.get("features")
         if features:
             episode_ids = []
@@ -100,12 +110,12 @@ class ADAM:
             properties = json["properties"]
         countryiso = properties["iso3"]
         if not countryiso:
-            properties["iso3"] = event["eventISO3"]
+            properties["iso3"] = event["iso3"]
         event_id = event["event_id"]
         if event_id not in properties:
             properties["event_id"] = event_id
         event["properties"] = properties
-        event_type = event["event_type"]
+        event_type = event["eventType"]
         eventtype_info = self.configuration["event_types"].get(event_type)
         name = eventtype_info["name"]
         event["name"] = lazy_fstr(name, properties)
@@ -153,7 +163,7 @@ class ADAM:
         dataset.set_expected_update_frequency("Never")
         dataset.set_subnational(True)
         dataset.add_country_location(countryiso)
-        event_type = episode["event_type"]
+        event_type = episode["eventType"].lower()
         tags = [event_type]
         from_date = properties.get("from_date")
         to_date = properties.get("to_date")
@@ -176,7 +186,7 @@ class ADAM:
                 extension = "shp"
             else:
                 extension = extension[1:]
-            resource.set_file_type(extension)
+            resource.set_format(extension)
             resource.set_file_to_upload(path)
             dataset.add_update_resource(resource)
             if preview:

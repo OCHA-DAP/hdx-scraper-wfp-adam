@@ -1,23 +1,26 @@
 # Collector specific configuration
-url: "https://exie6ocssxnczub3aslzanna540gfdjs.lambda-url.eu-west-1.on.aws/events/"
+# prod
+#url: "https://2nit7gjp8i.execute-api.eu-west-1.amazonaws.com/api/v1/events/"
+
+# test
+url: "https://jcaujxxvec.execute-api.eu-west-1.amazonaws.com/api/v1/events/"
+
 event_types:
-  earthquakes:
+  Earthquake:
     prefix_index: 0
     event_id_index: 1
     episode_id_index: ~
-    allowed_prefixes:
-      - "eq"
     name: "{properties['iso3']}-earthquake-{properties['event_id']}"
     title: "{properties['iso3']}: Earthquake - {properties['mag']}M - {parse_date(properties['published_at']).strftime('%b %Y')}"
     description: "Magnitude {properties['mag']} earthquake at {properties['depth']} depth occurred on {parse_date(properties['published_at']).strftime('%b %d %Y')} in {properties['place']}. It impacted {properties['population_impact']} people. The epicentre was at latitude {properties['latitude']} longitude {properties['longitude']}."
-  cyclones:
+  Tropical Storm:
     prefix_index: ~
     event_id_index: 0
     episode_id_index: 1
     name: "{properties['iso3']}-cyclone-{properties['event_id']}"
     title: "{properties['iso3']}: Cyclone - {properties['storm_status']} - {parse_date(properties['published_at']).strftime('%b %Y')}"
     description: "Cyclone ({properties['storm_status'].lower()}) during the period {parse_date(properties['from_date']).strftime('%b %d %Y')}-{parse_date(properties['to_date']).strftime('%b %d %Y')} in {properties['countries']}. It impacted {properties['population_impact']} people."
-  floods:
+  Flood:
     prefix_index: ~
     event_id_index: 0
     episode_id_index: ~

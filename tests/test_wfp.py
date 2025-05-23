@@ -3,63 +3,15 @@
 Unit tests for WFP ADAM.
 
 """
-from datetime import datetime, timezone
-from os.path import join
 
-import pytest
-from hdx.api.configuration import Configuration
-from hdx.api.locations import Locations
-from hdx.data.vocabulary import Vocabulary
-from hdx.location.country import Country
+from hdx.scraper.wfp.adam.pipeline import Pipeline
 from hdx.utilities.dateparse import parse_date
 from hdx.utilities.downloader import Download
 from hdx.utilities.path import temp_dir
 from hdx.utilities.retriever import Retrieve
-from hdx.utilities.useragent import UserAgent
-from wfp import ADAM
 
 
 class TestADAM:
-    @pytest.fixture(scope="function")
-    def fixtures(self):
-        return join("tests", "fixtures")
-
-    @pytest.fixture(scope="function")
-    def input_folder(self, fixtures):
-        return join(fixtures, "input")
-
-    @pytest.fixture(scope="function")
-    def configuration(self):
-        Configuration._create(
-            hdx_read_only=True,
-            user_agent="test",
-            project_config_yaml=join("config", "project_configuration.yaml"),
-        )
-        UserAgent.set_global("test")
-        Country.countriesdata(use_live=False)
-        Locations.set_validlocations(
-            [
-                {"name": "eth", "title": "eth"},
-                {"name": "idn", "title": "idn"},
-                {"name": "phl", "title": "phl"},
-            ]
-        )
-        configuration = Configuration.read()
-        tags = (
-            "geodata",
-            "affected population",
-            "earthquake-tsunami",
-            "cyclones-hurricanes-typhoons",
-        )
-        Vocabulary._tags_dict = {tag: {"Action to Take": "ok"} for tag in tags}
-        tags = [{"name": tag} for tag in tags]
-        Vocabulary._approved_vocabulary = {
-            "tags": tags,
-            "id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-            "name": "approved",
-        }
-        return configuration
-
     def test_generate_datasets_and_showcases(
         self,
         configuration,
@@ -74,13 +26,13 @@ class TestADAM:
                     downloader, folder, input_folder, folder, False, True
                 )
                 today = parse_date("2023-11-17")
-                adam = ADAM(configuration, retriever, today, folder)
-                adam.parse_feed(parse_date("2023-11-08"))
-                adam.parse_eventtypes_feeds()
-                events = adam.get_events()
+                pipeline = Pipeline(configuration, retriever, today, folder)
+                pipeline.parse_feed(parse_date("2023-11-08"))
+                pipeline.parse_eventtypes_feeds()
+                events = pipeline.get_events()
                 assert len(events) == 6
 
-                dataset, showcases = adam.generate_dataset(events[0])
+                dataset, showcases = pipeline.generate_dataset(events[0])
                 assert dataset == {
                     "data_update_frequency": "-1",
                     "dataset_date": "[2023-11-14T00:00:00 TO 2023-11-14T00:00:00]",
@@ -149,7 +101,7 @@ class TestADAM:
                     }
                 ]
 
-                dataset, showcases = adam.generate_dataset(events[4])
+                dataset, showcases = pipeline.generate_dataset(events[4])
                 assert dataset == {
                     "customviz": [
                         {
@@ -215,7 +167,7 @@ class TestADAM:
                     },
                 ]
 
-                dataset, showcases = adam.generate_dataset(events[2])
+                dataset, showcases = pipeline.generate_dataset(events[2])
                 assert dataset == {
                     "customviz": [
                         {
