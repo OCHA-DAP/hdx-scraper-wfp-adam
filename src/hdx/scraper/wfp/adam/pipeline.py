@@ -63,7 +63,7 @@ class Pipeline:
                 logger.error("Blank iso3!")
                 continue
             countryinfo = Country.get_country_info_from_iso3(countryiso3)
-            income_level = countryinfo["#indicator+incomelevel"]
+            income_level = countryinfo["World Bank Income Level"] or ""
             if income_level.lower() == "high":
                 logger.info(f"ignoring high income country {countryiso3}!")
                 continue
