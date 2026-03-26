@@ -21,4 +21,3 @@ event_types:
     description: >-
       Cyclone ({event['storm_status'].lower()}) during the period {parse_date(event['from_date']).strftime('%b %d %Y')}-{parse_date(event['to_date']).strftime('%b %d %Y')} in {event['countries']}.
       The center of the storm was located near latitude {event['latitude']} longitude {event['longitude']}.
-      It impacted {event['pop_est_buff_3']} people within {event['dist_km_buff_3']}km.

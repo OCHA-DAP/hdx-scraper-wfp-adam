@@ -127,8 +127,7 @@ class TestADAM:
                     "name": "mexico-cyclone-1001204",
                     "notes": "**ADAM ID: 1001204\\_10**  Cyclone (category 1) during the period "
                     "Sep 02 2025-Sep 04 2025 in Mexico. The center of the storm was "
-                    "located near latitude 24.0 longitude -113.7. It impacted 0 people "
-                    "within 120km.",
+                    "located near latitude 24.0 longitude -113.7.",
                     "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
                     "subnational": "1",
                     "tags": [

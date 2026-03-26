@@ -26,8 +26,8 @@ jobs:
       env:
         HDX_SITE: ${{ vars.HDX_SITE }}
         HDX_KEY: ${{ secrets.HDX_BOT_SCRAPERS_API_TOKEN }}
-        PREPREFIX: ${{ secrets.PREPREFIX }}
-        USER_AGENT: ${{ secrets.USER_AGENT }}
+        PREPREFIX: ${{ vars.HDX_USER_AGENT_PREPREFIX }}
+        USER_AGENT: ${{ vars.USER_AGENT }}
       run: |
         python -m hdx.scraper.wfp.adam
     - name: Send mail
