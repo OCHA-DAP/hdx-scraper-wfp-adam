@@ -121,7 +121,7 @@ class TestADAM:
                 assert dataset == {
                     "data_update_frequency": "-1",
                     "dataset_date": "[2025-09-04T00:00:00 TO 2025-09-04T00:00:00]",
-                    "dataset_preview": "no_preview",
+                    "dataset_preview": "resource_id",
                     "groups": [{"name": "mex"}],
                     "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
                     "name": "mexico-cyclone-1001204",
@@ -145,7 +145,7 @@ class TestADAM:
                 resources = dataset.get_resources()
                 assert resources == [
                     {
-                        "dataset_preview_enabled": "False",
+                        "dataset_preview_enabled": "True",
                         "description": "Shape File",
                         "format": "shp",
                         "name": "1001204-10-adam-ts-1001204-10-shp.zip",

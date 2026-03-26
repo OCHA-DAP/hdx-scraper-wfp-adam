@@ -145,7 +145,7 @@ class Pipeline:
         tags = {event["tag"]}
         dataset.set_time_period(episode["published_at"])
 
-        def add_resource(path, description, preview=False):
+        def add_resource(path, description):
             name = basename(path)
             filename, extension = splitext(name)
             resource = Resource(
@@ -160,19 +160,15 @@ class Pipeline:
                 extension = extension[1:]
             resource.set_format(extension)
             resource.set_file_to_upload(path)
-            dataset.add_update_resource(resource)
-            if preview:
-                resource.enable_dataset_preview()
-                dataset.preview_resource()
+            return resource
 
         def add_resource_with_url(url, description):
             try:
                 path = self.retriever.download_file(url)
-                add_resource(path, description)
-                return True
+                return add_resource(path, description)
             except DownloadError as ex:
                 logger.exception(ex)
-                return False
+                return None
 
         showcases = []
 
@@ -191,44 +187,7 @@ class Pipeline:
             showcase.add_tags(sorted(tags))
             showcases.append(showcase)
 
-        success = True
-        # analysis_output = properties.get("analysis_output")
-        # if analysis_output:
-        #     url_dict = None
-        #     try:
-        #         zippath = self.retriever.download_file(analysis_output)
-        #         with ZipFile(zippath, "r") as zipfile:
-        #             filenamelist = zipfile.namelist()
-        #             order = ["json", "tiff", "gpkg", ".txt"]
-        #             filenames = {x[-4:]: x for x in filenamelist if x[-4:] in order}
-        #             sorted_extensions = sorted(filenames, key=lambda x: order.index(x))
-        #             for extension in sorted_extensions:
-        #                 path = zipfile.extract(filenames[extension], path=self.folder)
-        #                 if path.endswith("json"):
-        #                     oldpath = path
-        #                     path = oldpath.replace("json", "geojson")
-        #                     rename(oldpath, path)
-        #                     add_resource(path, "GeoJSON File", preview=True)
-        #                 elif path.endswith("tiff"):
-        #                     add_resource(path, "GeoTIFF File")
-        #                 elif path.endswith("gpkg"):
-        #                     add_resource(path, "Geopackage File")
-        #                 else:
-        #                     add_resource(path, "Metadata File")
-        #     except DownloadError as ex:
-        #         logger.exception(ex)
-        #         success = False
-        #     if dataset.number_of_resources() == 0:
-        #         logger.error(f"{title} has no data files for dataset!")
-        #         return None, None
-        #     tags.append("geodata")
-        #     add_showcase(
-        #         "Report",
-        #         "Report",
-        #         properties["dashboard_url"],
-        #         self.configuration["flood_image_url"],
-        #     )
-        # else:
+        resources = []
         geojson_url = episode.get("detail_url")
         shape_url = episode.get("shapefile_url")
         url = episode.get("population_csv_url")
@@ -236,21 +195,31 @@ class Pipeline:
             logger.error(f"{title} has no data files for dataset!")
             return None, None
         if geojson_url:
-            success = add_resource_with_url(geojson_url, "GeoJSON File")
+            resource = add_resource_with_url(geojson_url, "GeoJSON File")
+            if resource:
+                resources.append(resource)
             tags.add("geodata")
         if shape_url:
-            success = add_resource_with_url(shape_url, "Shape File")
+            resource = add_resource_with_url(shape_url, "Shape File")
+            if resource:
+                resources.append(resource)
             tags.add("geodata")
-
         if url:
-            success = add_resource_with_url(url, "Population Estimation")
+            resource = add_resource_with_url(url, "Population Estimation")
+            if resource:
+                resources.append(resource)
             tags.add("affected population")
-        dataset.preview_off()
-        if not success:
+        if len(resources) == 0:
             return None, None
+        dataset.add_update_resources(resources)
+        dataset.preview_off()
         dataset.add_tags(sorted(tags))
         dashboard_url = episode.get("dashboard_url")
         if not dashboard_url:
+            for resource in resources:
+                if resource["description"] == "Shape File":
+                    resource.enable_dataset_preview()
+                    dataset.preview_resource()
             return dataset, showcases
 
         def view_image(map_url):
