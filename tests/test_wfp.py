@@ -25,172 +25,123 @@ class TestADAM:
                 retriever = Retrieve(
                     downloader, folder, input_folder, folder, False, True
                 )
-                today = parse_date("2023-11-17")
+                startdate = parse_date("2025-09-01")
+                today = parse_date("2026-03-26")
                 pipeline = Pipeline(configuration, retriever, today, folder)
-                pipeline.parse_feed(parse_date("2023-11-08"))
-                pipeline.parse_eventtypes_feeds()
-                events = pipeline.get_events()
-                assert len(events) == 6
+                eventtype_info = configuration["event_types"]["SM"]
+                latest_episodes = pipeline.parse_feed(startdate, eventtype_info)
+                assert len(latest_episodes) == 1
+                events = pipeline.parse_eventtypes_feed(latest_episodes, eventtype_info)
+                assert len(events) == 1
+                dataset, showcases = pipeline.generate_dataset(
+                    latest_episodes, events[0]
+                )
 
-                dataset, showcases = pipeline.generate_dataset(events[0])
-                assert dataset == {
-                    "data_update_frequency": "-1",
-                    "dataset_date": "[2023-11-14T00:00:00 TO 2023-11-14T00:00:00]",
-                    "dataset_preview": "resource_id",
-                    "groups": [{"name": "eth"}],
-                    "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
-                    "name": "ethiopia-flood-fl-20231114-eth-01",
-                    "notes": "**ADAM ID: FL-20231114-ETH-01**  Flood covering 1016365.0 sq m on Nov 14 2023 in Ethiopia. It "
-                    "impacted 534273 people.",
-                    "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
-                    "subnational": "1",
-                    "tags": [
-                        {
-                            "name": "geodata",
-                            "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-                        }
-                    ],
-                    "title": "Ethiopia: Flood - 1016365.0 sq m - Nov 2023",
-                }
-                resources = dataset.get_resources()
-                assert resources == [
-                    {
-                        "dataset_preview_enabled": "True",
-                        "description": "GeoJSON File",
-                        "format": "geojson",
-                        "name": "FL-20231114-ETH-01.geojson",
-                        "resource_type": "file.upload",
-                        "url_type": "upload",
-                    },
-                    {
-                        "description": "GeoTIFF File",
-                        "format": "geotiff",
-                        "name": "FL-20231114-ETH-01.tiff",
-                        "resource_type": "file.upload",
-                        "url_type": "upload",
-                    },
-                    {
-                        "description": "Geopackage File",
-                        "format": "geopackage",
-                        "name": "FL-20231114-ETH-01.gpkg",
-                        "resource_type": "file.upload",
-                        "url_type": "upload",
-                    },
-                    {
-                        "description": "Metadata File",
-                        "format": "txt",
-                        "name": "metadata.txt",
-                        "resource_type": "file.upload",
-                        "url_type": "upload",
-                    },
-                ]
-
-                assert showcases == [
-                    {
-                        "image_url": "https://multimedia.wfp.org/AssetLink/5c46vkj768qd0n6e12327eq14y857i8h.jpg",
-                        "name": "ethiopia-flood-fl-20231114-eth-01-report-showcase",
-                        "notes": "Report",
-                        "tags": [
-                            {
-                                "name": "geodata",
-                                "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-                            }
-                        ],
-                        "title": "Report",
-                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_fl/event/20231114/ADAM_ETH_FloodReport_20231114.pdf",
-                    }
-                ]
-
-                dataset, showcases = pipeline.generate_dataset(events[4])
                 assert dataset == {
                     "customviz": [
                         {
-                            "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/11/eq_us7000l9ku/eq_us7000l9ku.jpg"
+                            "url": "https://mcarans.github.io/view-images/#https://static.gis.wfp.org/adam_eq/events/2025/09/sm_us7000qtpj/sm_us7000qtpj.jpg"
                         }
                     ],
                     "data_update_frequency": "-1",
-                    "dataset_date": "[2023-11-08T00:00:00 TO 2023-11-08T00:00:00]",
+                    "dataset_date": "[2025-09-04T00:00:00 TO 2025-09-04T00:00:00]",
                     "dataset_preview": "no_preview",
-                    "groups": [{"name": "idn"}],
+                    "groups": [{"name": "arg"}],
                     "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
-                    "name": "indonesia-earthquake-eq-us7000l9ku",
-                    "notes": "**ADAM ID: eq\\_us7000l9ku**  Magnitude 6.7 earthquake at 10.0 depth occurred on Nov 08 2023 in "
-                    "Banda Sea. It impacted 0 people. The epicentre was at latitude "
-                    "-6.1455 longitude 129.9137.",
+                    "name": "argentina-earthquake-sm-us7000qtpj",
+                    "notes": "**ADAM ID: sm\\_us7000qtpj**  Magnitude 5.9 earthquake at 176.483 "
+                    "depth occurred on Sep 04 2025 91 km WSW of San Antonio de los "
+                    "Cobres, Argentina. The epicentre of the earthquake was located at "
+                    "latitude -24.3833 longitude -67.2005. It impacted 675 people within "
+                    "50km.",
                     "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
                     "subnational": "1",
                     "tags": [
                         {
                             "name": "affected population",
                             "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-                        }
+                        },
+                        {
+                            "name": "geodata",
+                            "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
+                        },
                     ],
-                    "title": "Indonesia: Earthquake - 6.7M - Nov 2023",
+                    "title": "Argentina: Earthquake - 5.9M - Sep 2025",
                 }
                 resources = dataset.get_resources()
                 assert resources == [
                     {
                         "dataset_preview_enabled": "False",
+                        "description": "GeoJSON File",
+                        "format": "geojson",
+                        "name": "detail-us7000qtpj.geojson",
+                    },
+                    {
+                        "dataset_preview_enabled": "False",
+                        "description": "Shape File",
+                        "format": "shp",
+                        "name": "sm-us7000qtpj-sm-us7000qtpj-shp.zip",
+                    },
+                    {
+                        "dataset_preview_enabled": "False",
                         "description": "Population Estimation",
                         "format": "csv",
-                        "name": "sm-us7000l9ku-sm-us7000l9ku-pop-estimation.csv",
-                        "resource_type": "file.upload",
-                        "url_type": "upload",
-                    }
+                        "name": "sm-us7000qtpj-sm-us7000qtpj-pop-estimation.csv",
+                    },
                 ]
+
                 assert showcases == [
                     {
-                        "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/11/eq_us7000l9ku/eq_us7000l9ku.jpg",
-                        "name": "indonesia-earthquake-eq-us7000l9ku-map-showcase",
+                        "image_url": "https://static.gis.wfp.org/adam_eq/events/2025/09/sm_us7000qtpj/sm_us7000qtpj.jpg",
+                        "name": "argentina-earthquake-sm-us7000qtpj-map-showcase",
                         "notes": "Map",
                         "tags": [
                             {
                                 "name": "affected population",
                                 "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-                            }
+                            },
+                            {
+                                "name": "geodata",
+                                "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
+                            },
                         ],
                         "title": "Map",
-                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/11/eq_us7000l9ku/eq_us7000l9ku.jpg",
-                    },
-                    {
-                        "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/11/sm_us7000l9ku/sm_us7000l9ku.jpg",
-                        "name": "indonesia-earthquake-eq-us7000l9ku-shake-map-showcase",
-                        "notes": "Shake Map",
-                        "tags": [
-                            {
-                                "name": "affected population",
-                                "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-                            }
-                        ],
-                        "title": "Shake Map",
-                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_eq/events/2023/11/sm_us7000l9ku/sm_us7000l9ku.jpg",
-                    },
+                        "url": "https://static.gis.wfp.org/adam_eq/events/2025/09/sm_us7000qtpj/sm_us7000qtpj.jpg",
+                    }
                 ]
 
-                dataset, showcases = pipeline.generate_dataset(events[2])
+                eventtype_info = configuration["event_types"]["TS"]
+                latest_episodes = pipeline.parse_feed(startdate, eventtype_info)
+                assert len(latest_episodes) == 1
+                events = pipeline.parse_eventtypes_feed(latest_episodes, eventtype_info)
+                assert len(events) == 1
+                dataset, showcases = pipeline.generate_dataset(
+                    latest_episodes, events[0]
+                )
                 assert dataset == {
-                    "customviz": [
-                        {
-                            "url": "https://mcarans.github.io/view-images/#https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/11/1001032_6/adam_ts_1001032_6.jpg"
-                        }
-                    ],
                     "data_update_frequency": "-1",
-                    "dataset_date": "[2023-11-12T00:00:00 TO 2023-11-13T23:59:59]",
+                    "dataset_date": "[2025-09-04T00:00:00 TO 2025-09-04T00:00:00]",
                     "dataset_preview": "no_preview",
-                    "groups": [{"name": "phl"}],
+                    "groups": [{"name": "mex"}],
                     "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
-                    "name": "philippines-cyclone-1001032",
-                    "notes": "**ADAM ID: 1001032\\_4**  Cyclone (tropical depression) during the period Nov 12 2023-Nov "
-                    "13 2023 in . It impacted 0 people.",
+                    "name": "mexico-cyclone-1001204",
+                    "notes": "**ADAM ID: 1001204\\_10**  Cyclone (category 1) during the period "
+                    "Sep 02 2025-Sep 04 2025 in Mexico. The center of the storm was "
+                    "located near latitude 24.0 longitude -113.7. It impacted 0 people "
+                    "within 120km.",
                     "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
                     "subnational": "1",
                     "tags": [
                         {
+                            "name": "affected population",
+                            "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
+                        },
+                        {
                             "name": "geodata",
                             "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-                        }
+                        },
                     ],
-                    "title": "Philippines: Cyclone - Tropical depression - Nov 2023",
+                    "title": "Mexico: Cyclone - Category 1 - Sep 2025",
                 }
                 resources = dataset.get_resources()
                 assert resources == [
@@ -198,36 +149,13 @@ class TestADAM:
                         "dataset_preview_enabled": "False",
                         "description": "Shape File",
                         "format": "shp",
-                        "name": "1001032-6-adam-ts-1001032-6-shp.zip",
-                        "resource_type": "file.upload",
-                        "url_type": "upload",
-                    }
-                ]
-                assert showcases == [
-                    {
-                        "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/11/1001032_6/adam_ts_1001032_6.jpg",
-                        "name": "philippines-cyclone-1001032-wind-map-showcase",
-                        "notes": "Wind Map",
-                        "tags": [
-                            {
-                                "name": "geodata",
-                                "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-                            }
-                        ],
-                        "title": "Wind Map",
-                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/11/1001032_6/adam_ts_1001032_6.jpg",
+                        "name": "1001204-10-adam-ts-1001204-10-shp.zip",
                     },
                     {
-                        "image_url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/11/1001032_6/adam_ts_1001032_6_rain5d.jpg",
-                        "name": "philippines-cyclone-1001032-rainfall-map-showcase",
-                        "notes": "Rainfall Map",
-                        "tags": [
-                            {
-                                "name": "geodata",
-                                "vocabulary_id": "4e61d464-4943-4e97-973a-84673c1aaa87",
-                            }
-                        ],
-                        "title": "Rainfall Map",
-                        "url": "https://adam-project-prod.s3-eu-west-1.amazonaws.com/adam_ts/events/2023/11/1001032_6/adam_ts_1001032_6_rain5d.jpg",
+                        "dataset_preview_enabled": "False",
+                        "description": "Population Estimation",
+                        "format": "csv",
+                        "name": "1001204-10-adam-ts-1001204-10-pop-estimation.csv",
                     },
                 ]
+                assert showcases == []

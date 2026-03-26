@@ -4,19 +4,19 @@ annotated-doc==0.0.4
     # via typer
 annotated-types==0.7.0
     # via pydantic
-attrs==25.4.0
+attrs==26.1.0
     # via
     #   frictionless
     #   jsonlines
     #   jsonschema
     #   referencing
-certifi==2026.1.4
+certifi==2026.2.25
     # via requests
-chardet==6.0.0.post1
+chardet==7.3.0
     # via frictionless
-charset-normalizer==3.4.4
+charset-normalizer==3.4.6
     # via requests
-ckanapi==4.9
+ckanapi==4.11
     # via hdx-python-api
 click==8.3.1
     # via typer
@@ -40,7 +40,7 @@ hdx-python-country==4.1.1
     # via
     #   hdx-scraper-wfp-adam (pyproject.toml)
     #   hdx-python-api
-hdx-python-utilities==4.0.7
+hdx-python-utilities==4.0.8
     # via
     #   hdx-scraper-wfp-adam (pyproject.toml)
     #   hdx-python-api
@@ -51,7 +51,7 @@ idna==3.11
     # via
     #   email-validator
     #   requests
-ijson==3.4.0.post0
+ijson==3.5.0
     # via hdx-python-utilities
 isodate==0.7.2
     # via frictionless
@@ -109,7 +109,7 @@ referencing==0.37.0
     # via
     #   jsonschema
     #   jsonschema-specifications
-requests==2.32.5
+requests==2.33.0
     # via
     #   ckanapi
     #   frictionless
@@ -127,17 +127,16 @@ rpds-py==0.30.0
     #   referencing
 ruamel-yaml==0.19.1
     # via hdx-python-utilities
-setuptools==82.0.0
+setuptools==82.0.1
     # via ckanapi
 shellingham==1.5.4
     # via typer
-simpleeval==1.0.3
+simpleeval==1.0.7
     # via frictionless
 simplejson==3.20.2
     # via ckanapi
 six==1.17.0
     # via
-    #   ckanapi
     #   pockets
     #   python-dateutil
     #   sphinxcontrib-napoleon
@@ -145,7 +144,7 @@ sphinxcontrib-napoleon==0.7
     # via defopt
 tableschema-to-template==0.0.13
     # via hdx-python-utilities
-tabulate==0.9.0
+tabulate==0.10.0
     # via frictionless
 tenacity==9.1.4
     # via hdx-python-country

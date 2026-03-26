@@ -33,9 +33,8 @@ def configuration():
     )
     Locations.set_validlocations(
         [
-            {"name": "eth", "title": "eth"},
-            {"name": "idn", "title": "idn"},
-            {"name": "phl", "title": "phl"},
+            {"name": "arg", "title": "Argentina"},
+            {"name": "mex", "title": "Mexico"},
         ]
     )
     Country.countriesdata(use_live=False)
