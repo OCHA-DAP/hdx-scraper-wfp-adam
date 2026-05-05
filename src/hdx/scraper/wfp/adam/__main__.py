@@ -5,14 +5,13 @@ Top level script. Calls other functions that generate datasets that this script 
 """
 
 import logging
+from datetime import datetime, UTC
 from os.path import expanduser, join
 
 from hdx.api.configuration import Configuration
 from hdx.api.utilities.hdx_state import HDXState
 from hdx.data.user import User
 from hdx.facades.infer_arguments import facade
-from hdx.scraper.wfp.adam._version import __version__
-from hdx.scraper.wfp.adam.pipeline import Pipeline
 from hdx.utilities.dateparse import iso_string_from_datetime, now_utc, parse_date
 from hdx.utilities.downloader import Download
 from hdx.utilities.path import (
@@ -20,6 +19,9 @@ from hdx.utilities.path import (
     wheretostart_tempdir_batch,
 )
 from hdx.utilities.retriever import Retrieve
+
+from hdx.scraper.wfp.adam._version import __version__
+from hdx.scraper.wfp.adam.pipeline import Pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -45,14 +47,15 @@ def main(save: bool = False, use_saved: bool = False) -> None:
     )
 
     with wheretostart_tempdir_batch(lookup) as info:
-        folder = info["folder"]
-        with HDXState(
-            "pipeline-state-wfp-adam",
-            folder,
-            parse_date,
-            iso_string_from_datetime,
-            configuration,
-        ) as state:
+            folder = info["folder"]
+            cur_state = datetime(2025, 1, 1, 0, 0, tzinfo=UTC)
+        # with HDXState(
+        #     "pipeline-state-wfp-adam",
+        #     folder,
+        #     parse_date,
+        #     iso_string_from_datetime,
+        #     configuration,
+        # ) as state:
             with Download() as downloader:
                 retriever = Retrieve(
                     downloader, folder, "saved_data", folder, save, use_saved
@@ -60,7 +63,8 @@ def main(save: bool = False, use_saved: bool = False) -> None:
                 today = now_utc()
                 pipeline = Pipeline(configuration, retriever, today, folder)
                 for event_type, eventtype_info in configuration["event_types"].items():
-                    latest_episodes = pipeline.parse_feed(state.get(), eventtype_info)
+#                    latest_episodes = pipeline.parse_feed(state.get(), eventtype_info)
+                    latest_episodes = pipeline.parse_feed(cur_state, eventtype_info)
                     events = pipeline.parse_eventtypes_feed(
                         latest_episodes, eventtype_info
                     )

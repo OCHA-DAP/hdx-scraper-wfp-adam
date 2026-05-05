@@ -12,19 +12,19 @@ import re
 from datetime import datetime
 from os.path import basename, splitext
 
-from slugify import slugify
-
 from hdx.data.dataset import Dataset
 from hdx.data.resource import Resource
 from hdx.data.showcase import Showcase
 from hdx.location.country import Country
-from hdx.scraper.wfp.adam.utilities import get_latitude_longitude
 from hdx.utilities.base_downloader import DownloadError
 from hdx.utilities.dateparse import parse_date
+from slugify import slugify
+
+from hdx.scraper.wfp.adam.utilities import get_latitude_longitude
 
 logger = logging.getLogger(__name__)
 
-DATE_FORMAT = "%Y-%m-%dT00:00:00Z"
+DATE_FORMAT = "%Y-%m-%dT00:00:00"
 
 
 def lazy_fstr(template, event):
@@ -45,21 +45,27 @@ class Pipeline:
     #   https://api.adam.geospatial.wfp.org/api/collections/adam.adam_eq_events/items?datetime-column=published_at&limit=10&datetime=2025-09-01T00%3A00%3A00Z%2F2026-03-24T01%3A53%3A00Z&filter=published%3Dtrue&f=json
     #   https://api.adam.geospatial.wfp.org/api/collections/adam.adam_ts_events/items?datetime-column=published_at&limit=10&datetime=2025-09-01T00%3A00%3A00Z%2F2026-03-24T01%3A53%3A00Z&filter=published%3Dtrue&f=json
     #
-    def get_all_events(self, previous_run_date: datetime, collection_id: str) -> list:
+    def get_all_events(
+        self, previous_run_date: datetime, collection_id: str, event_type: str
+    ) -> list:
         base_url = self.configuration["url"]
         start_date = previous_run_date.strftime(DATE_FORMAT)
-        base_url = f"{base_url}/{collection_id}/items?f=json&limit=10000&filter=published%3Dtrue&datetime-column=published_at&datetime={start_date}/{self.today}"
-        events = self.retriever.download_json(base_url)
+        if event_type == "FL":
+            url = f"{base_url}/{collection_id}/items?f=json&limit=10000&filter=cleared%3D'yes'&effective%3E'{start_date}'&sortby=-effective"
+        else:
+            url = f"{base_url}/{collection_id}/items?f=json&limit=10000&filter=published%3Dtrue%20AND%20published_at%3ETIMESTAMP('{start_date}')&sortby=-published_at"
+        events = self.retriever.download_json(url)
         return events
 
     def parse_feed(self, previous_run_date: datetime, eventtype_info: dict) -> dict:
         latest_episodes = {}
         collection_id = eventtype_info["collection_id"]
-        for event in self.get_all_events(previous_run_date, collection_id):
-            if not event["published"]:
-                continue
+        required_event_type = eventtype_info["event_type"]
+        for event in self.get_all_events(
+            previous_run_date, collection_id, required_event_type
+        ):
             event_type = event.get("event_type")
-            if event_type and event_type != eventtype_info["event_type"]:
+            if event_type and event_type != required_event_type:
                 continue
             countryiso3 = event["iso3"]
             if not countryiso3:

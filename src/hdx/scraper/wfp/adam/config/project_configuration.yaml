@@ -21,3 +21,12 @@ event_types:
     description: >-
       Cyclone ({event['storm_status'].lower()}) during the period {parse_date(event['from_date']).strftime('%b %d %Y')}-{parse_date(event['to_date']).strftime('%b %d %Y')} in {event['countries']}.
       The center of the storm was located near latitude {event['latitude']} longitude {event['longitude']}.
+#  FL:
+#    collection_id: "adam.adam_fl_events"
+#    event_type: "FL"
+#    tag: "flood"
+#    name: "{event['iso3']}-cyclone-{event['event_id']}"
+#    title: "{event['iso3']}: Cyclone - {event['storm_status']} - {parse_date(event['published_at']).strftime('%b %Y')}"
+#    description: >-
+#      Cyclone ({event['storm_status'].lower()}) during the period {parse_date(event['from_date']).strftime('%b %d %Y')}-{parse_date(event['to_date']).strftime('%b %d %Y')} in {event['countries']}.
+#      The center of the storm was located near latitude {event['latitude']} longitude {event['longitude']}.

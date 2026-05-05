@@ -4,11 +4,12 @@ Unit tests for WFP ADAM.
 
 """
 
-from hdx.scraper.wfp.adam.pipeline import Pipeline
 from hdx.utilities.dateparse import parse_date
 from hdx.utilities.downloader import Download
 from hdx.utilities.path import temp_dir
 from hdx.utilities.retriever import Retrieve
+
+from hdx.scraper.wfp.adam.pipeline import Pipeline
 
 
 class TestADAM:
@@ -25,7 +26,7 @@ class TestADAM:
                 retriever = Retrieve(
                     downloader, folder, input_folder, folder, False, True
                 )
-                startdate = parse_date("2025-09-01")
+                startdate = parse_date("2025-01-01")
                 today = parse_date("2026-03-26")
                 pipeline = Pipeline(configuration, retriever, today, folder)
                 eventtype_info = configuration["event_types"]["SM"]
