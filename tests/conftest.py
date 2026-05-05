@@ -33,16 +33,18 @@ def configuration():
     )
     Locations.set_validlocations(
         [
-            {"name": "arg", "title": "Argentina"},
             {"name": "mex", "title": "Mexico"},
+            {"name": "png", "title": "Papua New Guinea"},
+            {"name": "mdg", "title": "Madagascar"},
         ]
     )
     Country.countriesdata(use_live=False)
     tags = (
         "geodata",
         "affected population",
-        "earthquake-tsunami",
         "cyclones-hurricanes-typhoons",
+        "earthquake-tsunami",
+        "flooding",
     )
     Vocabulary._tags_dict = {tag: {"Action to Take": "ok"} for tag in tags}
     tags = [{"name": tag} for tag in tags]

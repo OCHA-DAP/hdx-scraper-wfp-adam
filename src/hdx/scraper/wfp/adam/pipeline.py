@@ -76,10 +76,10 @@ class Pipeline:
             if income_level.lower() == "high":
                 logger.info(f"ignoring high income country {countryiso3}!")
                 continue
-            published_at = parse_date(event["published_at"])
+            published_at = parse_date(event.get("published_at") or event["effective"])
             if published_at <= previous_run_date:
                 continue
-            key = event.get("event_id", event["uid"])
+            key = event.get("event_id") or event.get("uid") or event.get("eventid")
             episode_id = event.get("episode_id")
             prev_event = latest_episodes.get(key)
             if prev_event:
@@ -109,7 +109,7 @@ class Pipeline:
                 event["geometry"]
             )
             event["description"] = lazy_fstr(description, event)
-            key = event.get("event_id", event["uid"])
+            key = event.get("event_id") or event.get("uid") or event.get("eventid")
             events.append(
                 {
                     "key": key,
@@ -134,7 +134,7 @@ class Pipeline:
         slugified_name = slugify(f"{countryname}{name[3:]}")
         title = f"{countryname}{title[3:]}"
         logger.info(f"Creating dataset: {title}")
-        uid = episode["uid"].replace("_", "\_")
+        uid = (episode.get("uid") or episode.get("eventid", "")).replace("_", "\\_")
         description = f"**ADAM ID: {uid}**  {episode['description']}"
         dataset = Dataset(
             {
@@ -149,7 +149,7 @@ class Pipeline:
         dataset.set_subnational(True)
         dataset.add_country_location(countryiso)
         tags = {event["tag"]}
-        dataset.set_time_period(episode["published_at"])
+        dataset.set_time_period(episode.get("published_at") or episode["effective"])
 
         def add_resource(path, description):
             name = basename(path)
@@ -160,7 +160,7 @@ class Pipeline:
                     "description": description,
                 }
             )
-            if description == "Shape File":
+            if description in ("Shape File", "Flood Extent Data"):
                 extension = "shp"
             else:
                 extension = extension[1:]
@@ -197,7 +197,9 @@ class Pipeline:
         geojson_url = episode.get("detail_url")
         shape_url = episode.get("shapefile_url")
         url = episode.get("population_csv_url")
-        if not geojson_url and not shape_url and not url:
+        data_pkg_url = episode.get("data_pkg")
+        output_table_url = episode.get("output_table_url")
+        if not geojson_url and not shape_url and not url and not data_pkg_url:
             logger.error(f"{title} has no data files for dataset!")
             return None, None
         if geojson_url:
@@ -215,17 +217,35 @@ class Pipeline:
             if resource:
                 resources.append(resource)
             tags.add("affected population")
+        if data_pkg_url:
+            resource = add_resource_with_url(data_pkg_url, "Flood Extent Data")
+            if resource:
+                resources.append(resource)
+            tags.add("geodata")
+        if output_table_url:
+            resource = add_resource_with_url(output_table_url, "Population Estimation")
+            if resource:
+                resources.append(resource)
+            tags.add("affected population")
         if len(resources) == 0:
             return None, None
         dataset.add_update_resources(resources)
         dataset.preview_off()
         dataset.add_tags(sorted(tags))
         dashboard_url = episode.get("dashboard_url")
+        prod_url = episode.get("prod_url")
         if not dashboard_url:
             for resource in resources:
                 if resource["description"] == "Shape File":
                     resource.enable_dataset_preview()
                     dataset.preview_resource()
+            if prod_url:
+                add_showcase(
+                    "Flood Report",
+                    "Flood Report",
+                    prod_url,
+                    image_url="https://multimedia.wfp.org/AssetLink/5c46vkj768qd0n6e12327eq14y857i8h.jpg",
+                )
             return dataset, showcases
 
         def view_image(map_url):

@@ -5,7 +5,7 @@ event_types:
   SM:
     collection_id: "adam.adam_eq_events"
     event_type: "SM"
-    tag: "earthquake"
+    tag: "earthquake-tsunami"
     name: "{event['iso3']}-earthquake-{event['uid']}"
     title: "{event['iso3']}: Earthquake - {event['mag']}M - {parse_date(event['published_at']).strftime('%b %Y')}"
     description: >-
@@ -15,18 +15,18 @@ event_types:
   TS:
     collection_id: "adam.adam_ts_events"
     event_type: "TS"
-    tag: "tropical storm"
+    tag: "cyclones-hurricanes-typhoons"
     name: "{event['iso3']}-cyclone-{event['event_id']}"
     title: "{event['iso3']}: Cyclone - {event['storm_status']} - {parse_date(event['published_at']).strftime('%b %Y')}"
     description: >-
       Cyclone ({event['storm_status'].lower()}) during the period {parse_date(event['from_date']).strftime('%b %d %Y')}-{parse_date(event['to_date']).strftime('%b %d %Y')} in {event['countries']}.
       The center of the storm was located near latitude {event['latitude']} longitude {event['longitude']}.
-#  FL:
-#    collection_id: "adam.adam_fl_events"
-#    event_type: "FL"
-#    tag: "flood"
-#    name: "{event['iso3']}-cyclone-{event['event_id']}"
-#    title: "{event['iso3']}: Cyclone - {event['storm_status']} - {parse_date(event['published_at']).strftime('%b %Y')}"
-#    description: >-
-#      Cyclone ({event['storm_status'].lower()}) during the period {parse_date(event['from_date']).strftime('%b %d %Y')}-{parse_date(event['to_date']).strftime('%b %d %Y')} in {event['countries']}.
-#      The center of the storm was located near latitude {event['latitude']} longitude {event['longitude']}.
+  FL:
+    collection_id: "adam.adam_fl_events"
+    event_type: "FL"
+    tag: "flooding"
+    name: "{event['iso3']}-flood-{event['eventid']}"
+    title: "{event['iso3']}: Flood - {parse_date(event['effective']).strftime('%b %Y')}"
+    description: >-
+      Flood event in {event['country']} effective {parse_date(event['effective']).strftime('%b %d %Y')}.
+      Estimated {int(event['fl_popn'])} people and {int(event['fl_croplnd'])} ha of cropland affected.
