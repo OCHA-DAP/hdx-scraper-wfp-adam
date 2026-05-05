@@ -5,14 +5,13 @@ Top level script. Calls other functions that generate datasets that this script 
 """
 
 import logging
-from datetime import datetime, UTC
+from datetime import UTC, datetime
 from os.path import expanduser, join
 
 from hdx.api.configuration import Configuration
-from hdx.api.utilities.hdx_state import HDXState
 from hdx.data.user import User
 from hdx.facades.infer_arguments import facade
-from hdx.utilities.dateparse import iso_string_from_datetime, now_utc, parse_date
+from hdx.utilities.dateparse import now_utc
 from hdx.utilities.downloader import Download
 from hdx.utilities.path import (
     script_dir_plus_file,
@@ -47,8 +46,8 @@ def main(save: bool = False, use_saved: bool = False) -> None:
     )
 
     with wheretostart_tempdir_batch(lookup) as info:
-            folder = info["folder"]
-            cur_state = datetime(2025, 1, 1, 0, 0, tzinfo=UTC)
+        folder = info["folder"]
+        cur_state = datetime(2025, 1, 1, 0, 0, tzinfo=UTC)
         # with HDXState(
         #     "pipeline-state-wfp-adam",
         #     folder,
@@ -56,43 +55,41 @@ def main(save: bool = False, use_saved: bool = False) -> None:
         #     iso_string_from_datetime,
         #     configuration,
         # ) as state:
-            with Download() as downloader:
-                retriever = Retrieve(
-                    downloader, folder, "saved_data", folder, save, use_saved
-                )
-                today = now_utc()
-                pipeline = Pipeline(configuration, retriever, today, folder)
-                for event_type, eventtype_info in configuration["event_types"].items():
-#                    latest_episodes = pipeline.parse_feed(state.get(), eventtype_info)
-                    latest_episodes = pipeline.parse_feed(cur_state, eventtype_info)
-                    events = pipeline.parse_eventtypes_feed(
-                        latest_episodes, eventtype_info
+        with Download() as downloader:
+            retriever = Retrieve(
+                downloader, folder, "saved_data", folder, save, use_saved
+            )
+            today = now_utc()
+            pipeline = Pipeline(configuration, retriever, today, folder)
+            for event_type, eventtype_info in configuration["event_types"].items():
+                #                    latest_episodes = pipeline.parse_feed(state.get(), eventtype_info)
+                latest_episodes = pipeline.parse_feed(cur_state, eventtype_info)
+                events = pipeline.parse_eventtypes_feed(latest_episodes, eventtype_info)
+                logger.info(f"Number of datasets: {len(events)}")
+
+                for event in events:
+                    dataset, showcases = pipeline.generate_dataset(
+                        latest_episodes, event
                     )
-                    logger.info(f"Number of datasets: {len(events)}")
+                    if not dataset:
+                        continue
+                    dataset.update_from_yaml(
+                        script_dir_plus_file(
+                            join("config", "hdx_dataset_static.yaml"), main
+                        )
+                    )
+                    # ensure markdown has line breaks
+                    dataset["notes"] = dataset["notes"].replace("\n", "  \n")
 
-                    for event in events:
-                        dataset, showcases = pipeline.generate_dataset(
-                            latest_episodes, event
-                        )
-                        if not dataset:
-                            continue
-                        dataset.update_from_yaml(
-                            script_dir_plus_file(
-                                join("config", "hdx_dataset_static.yaml"), main
-                            )
-                        )
-                        # ensure markdown has line breaks
-                        dataset["notes"] = dataset["notes"].replace("\n", "  \n")
-
-                        dataset.create_in_hdx(
-                            remove_additional_resources=True,
-                            updated_by_script=updated_by_script,
-                            batch=info["batch"],
-                        )
-                        for showcase in showcases:
-                            showcase.create_in_hdx()
-                            showcase.add_dataset(dataset)
-                # state.set(now_utc())
+                    dataset.create_in_hdx(
+                        remove_additional_resources=True,
+                        updated_by_script=updated_by_script,
+                        batch=info["batch"],
+                    )
+                    for showcase in showcases:
+                        showcase.create_in_hdx()
+                        showcase.add_dataset(dataset)
+            # state.set(now_utc())
 
 
 if __name__ == "__main__":
