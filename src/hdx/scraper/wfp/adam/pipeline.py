@@ -10,7 +10,6 @@ Reads WFP ADAM data and creates datasets.
 import logging
 import re
 from datetime import datetime
-from os.path import basename, splitext
 
 from hdx.data.dataset import Dataset
 from hdx.data.resource import Resource
@@ -18,6 +17,7 @@ from hdx.data.showcase import Showcase
 from hdx.location.country import Country
 from hdx.utilities.base_downloader import DownloadError
 from hdx.utilities.dateparse import parse_date
+from hdx.utilities.url import get_filename_extension_from_url
 from slugify import slugify
 
 from hdx.scraper.wfp.adam.utilities import get_latitude_longitude
@@ -154,25 +154,22 @@ class Pipeline:
 
         resource_name = episode["resource_name"]
 
-        def add_resource(path, description, format=None):
-            name = basename(path)
-            filename, extension = splitext(name)
-            resource = Resource(
-                {
-                    "name": f"{resource_name}{extension}",
-                    "description": description,
-                }
-            )
-            if not format:
-                format = extension[1:]
-            resource.set_format(format)
-            resource.set_file_to_upload(path)
-            return resource
-
-        def add_resource_with_url(url, description, format=None):
+        def add_resource(url, description, format=None):
+            _, extension = get_filename_extension_from_url(url)
+            filename = f"{resource_name}{extension}"
             try:
-                path = self.retriever.download_file(url)
-                return add_resource(path, description, format)
+                path = self.retriever.download_file(url, filename=filename)
+                resource = Resource(
+                    {
+                        "name": filename,
+                        "description": description,
+                    }
+                )
+                if not format:
+                    format = extension[1:]
+                resource.set_format(format)
+                resource.set_file_to_upload(path)
+                return resource
             except DownloadError as ex:
                 logger.exception(ex)
                 return None
@@ -205,35 +202,35 @@ class Pipeline:
             return None, None
         resource_description = episode["resource_description"]
         if geojson_url:
-            resource = add_resource_with_url(
+            resource = add_resource(
                 geojson_url, resource_description.replace("Data", "GeoJSON")
             )
             if resource:
                 resources.append(resource)
             tags.add("geodata")
         if shape_url:
-            resource = add_resource_with_url(
+            resource = add_resource(
                 shape_url, resource_description.replace("Data", "Shapefile"), "shp"
             )
             if resource:
                 resources.append(resource)
             tags.add("geodata")
         if url:
-            resource = add_resource_with_url(
+            resource = add_resource(
                 url, resource_description.replace("Data", "Population estimation")
             )
             if resource:
                 resources.append(resource)
             tags.add("affected population")
         if data_pkg_url:
-            resource = add_resource_with_url(
+            resource = add_resource(
                 data_pkg_url, resource_description.replace("Data", "GeoTIFF"), "geotiff"
             )
             if resource:
                 resources.append(resource)
             tags.add("geodata")
         if output_table_url:
-            resource = add_resource_with_url(
+            resource = add_resource(
                 output_table_url,
                 resource_description.replace("Data", "Population estimation"),
             )
