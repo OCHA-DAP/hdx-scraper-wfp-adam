@@ -42,9 +42,6 @@ class Pipeline:
         self.last_build_date = None
         self.events = []
 
-    #   https://api.adam.geospatial.wfp.org/api/collections/adam.adam_eq_events/items?datetime-column=published_at&limit=10&datetime=2025-09-01T00%3A00%3A00Z%2F2026-03-24T01%3A53%3A00Z&filter=published%3Dtrue&f=json
-    #   https://api.adam.geospatial.wfp.org/api/collections/adam.adam_ts_events/items?datetime-column=published_at&limit=10&datetime=2025-09-01T00%3A00%3A00Z%2F2026-03-24T01%3A53%3A00Z&filter=published%3Dtrue&f=json
-    #
     def get_all_events(
         self, previous_run_date: datetime, collection_id: str, event_type: str
     ) -> list:
@@ -60,12 +57,12 @@ class Pipeline:
     def parse_feed(self, previous_run_date: datetime, eventtype_info: dict) -> dict:
         latest_episodes = {}
         collection_id = eventtype_info["collection_id"]
-        required_event_type = eventtype_info["event_type"]
+        event_type_code = eventtype_info["event_type_code"]
         for event in self.get_all_events(
-            previous_run_date, collection_id, required_event_type
+            previous_run_date, collection_id, event_type_code
         ):
             event_type = event.get("event_type")
-            if event_type and event_type != required_event_type:
+            if event_type and event_type != event_type_code:
                 continue
             countryiso3 = event["iso3"]
             if not countryiso3:
@@ -101,6 +98,8 @@ class Pipeline:
         name = eventtype_info["name"]
         title = eventtype_info["title"]
         description = eventtype_info["description"]
+        resource_name = eventtype_info["resource_name"]
+        resource_description = eventtype_info["resource_description"]
         events = []
         for event in latest_episodes.values():
             event["name"] = lazy_fstr(name, event)
@@ -109,6 +108,8 @@ class Pipeline:
                 event["geometry"]
             )
             event["description"] = lazy_fstr(description, event)
+            event["resource_name"] = lazy_fstr(resource_name, event).lower()
+            event["resource_description"] = lazy_fstr(resource_description, event)
             key = event.get("event_id") or event.get("uid") or event.get("eventid")
             events.append(
                 {
@@ -131,7 +132,7 @@ class Pipeline:
         title = episode["title"]
         countryiso = episode["iso3"]
         countryname = Country.get_country_name_from_iso3(countryiso)
-        slugified_name = slugify(f"{countryname}{name[3:]}")
+        slugified_name = slugify(f"{countryiso}{name[3:]}")
         title = f"{countryname}{title[3:]}"
         logger.info(f"Creating dataset: {title}")
         uid = (episode.get("uid") or episode.get("eventid", "")).replace("_", "\\_")
@@ -151,27 +152,27 @@ class Pipeline:
         tags = {event["tag"]}
         dataset.set_time_period(episode.get("published_at") or episode["effective"])
 
-        def add_resource(path, description):
+        resource_name = episode["resource_name"]
+
+        def add_resource(path, description, format=None):
             name = basename(path)
             filename, extension = splitext(name)
             resource = Resource(
                 {
-                    "name": name,
+                    "name": f"{resource_name}{extension}",
                     "description": description,
                 }
             )
-            if description in ("Shape File", "Flood Extent Data"):
-                extension = "shp"
-            else:
-                extension = extension[1:]
-            resource.set_format(extension)
+            if not format:
+                format = extension[1:]
+            resource.set_format(format)
             resource.set_file_to_upload(path)
             return resource
 
-        def add_resource_with_url(url, description):
+        def add_resource_with_url(url, description, format=None):
             try:
                 path = self.retriever.download_file(url)
-                return add_resource(path, description)
+                return add_resource(path, description, format)
             except DownloadError as ex:
                 logger.exception(ex)
                 return None
@@ -202,28 +203,40 @@ class Pipeline:
         if not geojson_url and not shape_url and not url and not data_pkg_url:
             logger.error(f"{title} has no data files for dataset!")
             return None, None
+        resource_description = episode["resource_description"]
         if geojson_url:
-            resource = add_resource_with_url(geojson_url, "GeoJSON File")
+            resource = add_resource_with_url(
+                geojson_url, resource_description.replace("Data", "GeoJSON")
+            )
             if resource:
                 resources.append(resource)
             tags.add("geodata")
         if shape_url:
-            resource = add_resource_with_url(shape_url, "Shape File")
+            resource = add_resource_with_url(
+                shape_url, resource_description.replace("Data", "Shapefile"), "shp"
+            )
             if resource:
                 resources.append(resource)
             tags.add("geodata")
         if url:
-            resource = add_resource_with_url(url, "Population Estimation")
+            resource = add_resource_with_url(
+                url, resource_description.replace("Data", "Population estimation")
+            )
             if resource:
                 resources.append(resource)
             tags.add("affected population")
         if data_pkg_url:
-            resource = add_resource_with_url(data_pkg_url, "Flood Extent Data")
+            resource = add_resource_with_url(
+                data_pkg_url, resource_description.replace("Data", "GeoTIFF"), "geotiff"
+            )
             if resource:
                 resources.append(resource)
             tags.add("geodata")
         if output_table_url:
-            resource = add_resource_with_url(output_table_url, "Population Estimation")
+            resource = add_resource_with_url(
+                output_table_url,
+                resource_description.replace("Data", "Population estimation"),
+            )
             if resource:
                 resources.append(resource)
             tags.add("affected population")

@@ -4,29 +4,35 @@ url: "https://api.adam.geospatial.wfp.org/api/collections"
 event_types:
   SM:
     collection_id: "adam.adam_eq_events"
-    event_type: "SM"
+    event_type_code: "SM"
     tag: "earthquake-tsunami"
     name: "{event['iso3']}-earthquake-{event['uid']}"
-    title: "{event['iso3']}: Earthquake - {event['mag']}M - {parse_date(event['published_at']).strftime('%b %Y')}"
+    title: "{event['iso3']} - Earthquake on {parse_date(event['published_at']).strftime('%b %d %Y')}"
     description: >-
       Magnitude {event['mag']} earthquake at {event['depth']} depth occurred on {parse_date(event['published_at']).strftime('%b %d %Y')} {event['place']}.
       The epicentre of the earthquake was located at latitude {event['latitude']} longitude {event['longitude']}.
       It impacted {event['pop_est_buff_3']} people within {event['dist_km_buff_3']}km.
+    resource_name: "{event['iso3']}_wfpadam_earthquake_{parse_date(event['published_at']).strftime('%Y%m%d')}"
+    resource_description: "Data for earthquake on {parse_date(event['published_at']).strftime('%b %d %Y')} {event['place']}"
   TS:
     collection_id: "adam.adam_ts_events"
-    event_type: "TS"
+    event_type_code: "TS"
     tag: "cyclones-hurricanes-typhoons"
-    name: "{event['iso3']}-cyclone-{event['event_id']}"
-    title: "{event['iso3']}: Cyclone - {event['storm_status']} - {parse_date(event['published_at']).strftime('%b %Y')}"
+    name: "{event['iso3']}-storm-{event['event_id']}"
+    title: "{event['iso3']} - {event['storm_status']} on {parse_date(event['from_date']).strftime('%b %d %Y')}"
     description: >-
-      Cyclone ({event['storm_status'].lower()}) during the period {parse_date(event['from_date']).strftime('%b %d %Y')}-{parse_date(event['to_date']).strftime('%b %d %Y')} in {event['countries']}.
+      {event['storm_status']} during the period {parse_date(event['from_date']).strftime('%b %d %Y')}-{parse_date(event['to_date']).strftime('%b %d %Y')} in {event['countries']}.
       The center of the storm was located near latitude {event['latitude']} longitude {event['longitude']}.
+    resource_name: "{event['iso3']}_wfpadam_storm_{parse_date(event['from_date']).strftime('%Y%m%d')}"
+    resource_description: "Data for {event['storm_status']} during {parse_date(event['from_date']).strftime('%b %d %Y')}-{parse_date(event['to_date']).strftime('%b %d %Y')} in {event['countries']}"
   FL:
     collection_id: "adam.adam_fl_events"
-    event_type: "FL"
+    event_type_code: "FL"
     tag: "flooding"
     name: "{event['iso3']}-flood-{event['eventid']}"
-    title: "{event['iso3']}: Flood - {parse_date(event['effective']).strftime('%b %Y')}"
+    title: "{event['iso3']} - Flood on {parse_date(event['effective']).strftime('%b %d %Y')}"
     description: >-
-      Flood event in {event['country']} effective {parse_date(event['effective']).strftime('%b %d %Y')}.
-      Estimated {int(event['fl_popn'])} people and {int(event['fl_croplnd'])} ha of cropland affected.
+      A flood occurred on {parse_date(event['effective']).strftime('%b %d %Y')} in {event['country']}.
+      It affected an estimated {int(event['fl_popn'])} people and {int(event['fl_croplnd'])} ha of cropland.
+    resource_name: "{event['iso3']}_wfpadam_flood_{parse_date(event['effective']).strftime('%Y%m%d')}"
+    resource_description: "Data for flood on {parse_date(event['effective']).strftime('%b %d %Y')} in {event['country']}"
