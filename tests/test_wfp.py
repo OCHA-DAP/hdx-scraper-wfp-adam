@@ -50,10 +50,17 @@ class TestADAM:
                     "groups": [{"name": "mex"}],
                     "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
                     "name": "mex-earthquake-sm-us7000si51",
-                    "notes": "**ADAM ID: sm\\_us7000si51**  Magnitude 5.7 earthquake at 22.194 "
-                    "depth occurred on May 04 2026 2 km SE of Zocoteaca de León, Mexico. "
-                    "The epicentre of the earthquake was located at latitude 16.6223 "
-                    "longitude -97.9846. It impacted 271437 people within 50km.",
+                    "notes": "**ADAM ID: "
+                    "**[sm\\_us7000si51](https://api.adam.geospatial.wfp.org/api/collections/adam.adam_eq_events/items?uid=sm_us7000si51)  "
+                    "Magnitude 5.7 earthquake at 22.194 depth occurred on May 04 2026 2 "
+                    "km SE of Zocoteaca de León, Mexico. The epicentre of the earthquake "
+                    "was located at latitude 16.6223 longitude -97.9846. It impacted "
+                    "271437 people within 50km.  \n"
+                    "  \n"
+                    "WFP’s Automated Disaster Analysis and Mapping (ADAM) system is an "
+                    "operational system for collecting, analysing and mapping geospatial "
+                    "and socio-economic information following sudden onset humanitarian "
+                    "emergencies.",
                     "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
                     "subnational": "1",
                     "tags": [
@@ -135,9 +142,16 @@ class TestADAM:
                     "groups": [{"name": "png"}],
                     "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
                     "name": "png-storm-1001268",
-                    "notes": "**ADAM ID: 1001268\\_18**  Tropical storm during the period Apr 04 "
-                    "2026-Apr 10 2026 in Solomon Islands, Papua New Guinea. The center "
-                    "of the storm was located near latitude -8.4 longitude 154.3.",
+                    "notes": "**ADAM ID: "
+                    "**[1001268\\_18](https://api.adam.geospatial.wfp.org/api/collections/adam.adam_ts_events/items?event_id=1001268)  "
+                    "Tropical storm during the period Apr 04 2026-Apr 10 2026 in Solomon "
+                    "Islands, Papua New Guinea. The center of the storm was located near "
+                    "latitude -8.4 longitude 154.3.  \n"
+                    "  \n"
+                    "WFP’s Automated Disaster Analysis and Mapping (ADAM) system is an "
+                    "operational system for collecting, analysing and mapping geospatial "
+                    "and socio-economic information following sudden onset humanitarian "
+                    "emergencies.",
                     "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
                     "subnational": "1",
                     "tags": [
@@ -190,9 +204,15 @@ class TestADAM:
                     "groups": [{"name": "mdg"}],
                     "maintainer": "196196be-6037-4488-8b71-d786adf4c081",
                     "name": "mdg-flood-fl-20260213-mdg-00",
-                    "notes": "**ADAM ID: FL-20260213-MDG-00**  A flood occurred on Feb 13 2026 in "
-                    "Madagascar. It affected an estimated 1229989 people and 197440 ha "
-                    "of cropland.",
+                    "notes": "**ADAM ID: "
+                    "**[FL-20260213-MDG-00](https://api.adam.geospatial.wfp.org/api/collections/adam.adam_fl_events/items?eventid=FL-20260213-MDG-00)  "
+                    "A flood occurred on Feb 13 2026 in Madagascar. It affected an "
+                    "estimated 1229989 people and 197440 ha of cropland.  \n"
+                    "  \n"
+                    "WFP’s Automated Disaster Analysis and Mapping (ADAM) system is an "
+                    "operational system for collecting, analysing and mapping geospatial "
+                    "and socio-economic information following sudden onset humanitarian "
+                    "emergencies.",
                     "owner_org": "1ca198b6-e490-4cd0-9c1a-5b91bad9879a",
                     "subnational": "1",
                     "tags": [

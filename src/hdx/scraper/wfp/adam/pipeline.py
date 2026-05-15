@@ -43,14 +43,13 @@ class Pipeline:
         self.events = []
 
     def get_all_events(
-        self, previous_run_date: datetime, collection_id: str, event_type: str
+        self, previous_run_date: datetime, collection_url: str, event_type: str
     ) -> list:
-        base_url = self.configuration["url"]
         start_date = previous_run_date.strftime(DATE_FORMAT)
         if event_type == "FL":
-            url = f"{base_url}/{collection_id}/items?f=json&limit=10000&filter=cleared%3D'yes'&effective%3E'{start_date}'&sortby=-effective"
+            url = f"{collection_url}?f=json&limit=10000&filter=cleared%3D'yes'&effective%3E'{start_date}'&sortby=-effective"
         else:
-            url = f"{base_url}/{collection_id}/items?f=json&limit=10000&filter=published%3Dtrue%20AND%20published_at%3ETIMESTAMP('{start_date}')&sortby=-published_at"
+            url = f"{collection_url}?f=json&limit=10000&filter=published%3Dtrue%20AND%20published_at%3ETIMESTAMP('{start_date}')&sortby=-published_at"
         events = self.retriever.download_json(url)
         return events
 
@@ -58,8 +57,10 @@ class Pipeline:
         latest_episodes = {}
         collection_id = eventtype_info["collection_id"]
         event_type_code = eventtype_info["event_type_code"]
+        base_url = self.configuration["url"]
+        collection_url = f"{base_url}/{collection_id}/items"
         for event in self.get_all_events(
-            previous_run_date, collection_id, event_type_code
+            previous_run_date, collection_url, event_type_code
         ):
             event_type = event.get("event_type")
             if event_type and event_type != event_type_code:
@@ -76,7 +77,11 @@ class Pipeline:
             published_at = parse_date(event.get("published_at") or event["effective"])
             if published_at <= previous_run_date:
                 continue
-            key = event.get("event_id") or event.get("uid") or event.get("eventid")
+            for keyname in ("event_id", "uid", "eventid"):
+                key = event.get(keyname)
+                if key:
+                    break
+            event["event_url"] = f"{collection_url}?{keyname}={key}"
             episode_id = event.get("episode_id")
             prev_event = latest_episodes.get(key)
             if prev_event:
@@ -101,7 +106,7 @@ class Pipeline:
         resource_name = eventtype_info["resource_name"]
         resource_description = eventtype_info["resource_description"]
         events = []
-        for event in latest_episodes.values():
+        for key, event in latest_episodes.items():
             event["name"] = lazy_fstr(name, event)
             event["title"] = lazy_fstr(title, event)
             event["latitude"], event["longitude"] = get_latitude_longitude(
@@ -110,7 +115,6 @@ class Pipeline:
             event["description"] = lazy_fstr(description, event)
             event["resource_name"] = lazy_fstr(resource_name, event).lower()
             event["resource_description"] = lazy_fstr(resource_description, event)
-            key = event.get("event_id") or event.get("uid") or event.get("eventid")
             events.append(
                 {
                     "key": key,
@@ -135,13 +139,16 @@ class Pipeline:
         slugified_name = slugify(f"{countryiso}{name[3:]}")
         title = f"{countryname}{title[3:]}"
         logger.info(f"Creating dataset: {title}")
-        uid = (episode.get("uid") or episode.get("eventid", "")).replace("_", "\\_")
-        description = f"**ADAM ID: {uid}**  {episode['description']}"
+        evid = (episode.get("uid") or episode.get("eventid", "")).replace("_", "\\_")
+        description = (
+            f"**ADAM ID: **[{evid}]({episode['event_url']})  {episode['description']}"
+        )
+        description_extra = self.configuration["description_extra"]
         dataset = Dataset(
             {
                 "name": slugified_name,
                 "title": title,
-                "notes": description,
+                "notes": f"{description}  \n  \n{description_extra}",
             }
         )
         dataset.set_maintainer("196196be-6037-4488-8b71-d786adf4c081")

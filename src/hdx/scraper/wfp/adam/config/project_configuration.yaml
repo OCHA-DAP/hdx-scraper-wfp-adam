@@ -1,6 +1,10 @@
 # Collector specific configuration
 url: "https://api.adam.geospatial.wfp.org/api/collections"
 
+description_extra: "WFP’s Automated Disaster Analysis and Mapping (ADAM) system is
+an operational system for collecting, analysing and mapping geospatial and socio-economic
+information following sudden onset humanitarian emergencies."
+
 event_types:
   SM:
     collection_id: "adam.adam_eq_events"
